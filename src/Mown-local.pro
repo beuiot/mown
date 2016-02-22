@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-BOOST_PATH = "D:\Dev\boost_1_57_0"
+BOOST_PATH = "C:\local\boost_1_57_0"
 
 QT       += core gui
 
@@ -51,25 +51,24 @@ win32-g++ {
 
 win32-msvc2012
 {
-    #INCLUDEPATH += $$BOOST_PATH
-    #DEPENDPATH += $$BOOST_PATH\lib32-msvc-11.0
+    INCLUDEPATH += $$BOOST_PATH
 
-    #INCLUDEPATH += C:\local\yaml-cpp-0.5.1\include
-    #LIBS += C:\local\yaml-cpp-0.5.1\MinSizeRel\libyaml-cppmd.lib
+    INCLUDEPATH += C:\local\yaml-cpp-0.5.1\include
+    LIBS += C:\local\yaml-cpp-0.5.1\MinSizeRel\libyaml-cppmd.lib
 }
 
 win32-msvc2013
 {
-    INCLUDEPATH += $$BOOST_PATH
+    #INCLUDEPATH += $$BOOST_PATH
     #DEPENDPATH += $$BOOST_PATH\stage
 
-    INCLUDEPATH += D:\Dev\yaml-cpp-0.5.1\include
-    LIBS += D:\Dev\yaml-cpp-0.5.1\build\x64\MinSizeRel\libyaml-cppmd.lib
+    #INCLUDEPATH += D:\Dev\yaml-cpp-0.5.1\include
+    #LIBS += D:\Dev\yaml-cpp-0.5.1\build\x64\MinSizeRel\libyaml-cppmd.lib
 
 
-    LIBS += $$BOOST_PATH\stage\lib\libboost_filesystem-vc120-mt-1_57.lib
-    LIBS += $$BOOST_PATH\stage\lib\libboost_system-vc120-mt-1_57.lib
-    LIBS += $$BOOST_PATH\stage\lib\libboost_date_time-vc120-mt-1_57.lib
+    #LIBS += $$BOOST_PATH\stage\lib\libboost_filesystem-vc120-mt-1_57.lib
+    #LIBS += $$BOOST_PATH\stage\lib\libboost_system-vc120-mt-1_57.lib
+    #LIBS += $$BOOST_PATH\stage\lib\libboost_date_time-vc120-mt-1_57.lib
 
     #LIBS += $$BOOST_PATH\lib
 

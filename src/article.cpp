@@ -294,8 +294,6 @@ std::string Article::FormatExcerpt()
 
     }
 
-    //sstr << "\n\n<a href=\"http://www.beuiot.info/" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">Lire la suite...</a>";
-
     std::string result = sstr.str();
     ContentFactory::ReplaceInString(result, "\n", " ");
     return result;

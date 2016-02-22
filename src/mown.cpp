@@ -43,7 +43,7 @@ bool Mown::Export(const std::string path)
             if (boost::filesystem::is_regular_file(itr->status()))
             {
                 boost::filesystem::path filePath = itr->path();
-                if (filePath.extension().string() == ".yaml")
+                if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
                 {
                     Article article;
                     article.LoadFromFile(filePath.string());
@@ -93,7 +93,7 @@ bool Mown::Export(const std::string path)
 
         std::stringstream rssFileContent;
         rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
-        rssFileContent << "  <channel>" << std::endl << "    <title>Beuiot.info</title>" << std::endl << "    <link>http://www.beuiot.info/</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
+        rssFileContent << "  <channel>" << std::endl << "    <title>" << m_Settings.m_WebsiteName << "</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
         rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
 
         for (auto it = m_Articles.begin();
@@ -113,7 +113,7 @@ bool Mown::Export(const std::string path)
 
                     rssFileContent << "    <item>" << std::endl;
                     rssFileContent << "       <title>" << it->m_Title << "</title>" << std::endl;
-                    rssFileContent << "       <link>http://www.beuiot.info/" << it->GetLink() << "</link>" << std::endl;
+                    rssFileContent << "       <link>" << m_Settings.m_Url << it->GetLink() << "</link>" << std::endl;
                     rssFileContent << "       <description>" << it->FormatExcerpt() << "</description>" << std::endl;
                     rssFileContent << "       <pubDate>" << it->GetStandardDate() << "</pubDate>" << std::endl;
                     rssFileContent << "    </item>" << std::endl;
@@ -129,6 +129,8 @@ bool Mown::Export(const std::string path)
 
                 ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
                 ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
+                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
+                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 
                 std::ofstream fout(file.string());
@@ -166,6 +168,8 @@ bool Mown::Export(const std::string path)
             for (int i = 0; i < it->GetPageCount(); i++)
             {
                 std::string fileContent = it->FormatArticleListPage(i, m_PageTemplate, m_ArticleTemplate, tagList);
+                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
+                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
                 boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
                 std::ofstream fout(file.string());
@@ -193,6 +197,8 @@ bool Mown::Export(const std::string path)
 
             ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
             ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
+            ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
+            ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 
             ContentFactory::ReplaceInString(fileContent, "<!-- tags -->", GenerateTagList(it->m_Title));
@@ -386,6 +392,9 @@ std::string Mown::GetLocalUrl()
 bool Mown::LoadConfig(std::string path)
 {
     boost::filesystem::path d(path);
+
+    if (!m_Settings.LoadFromFile((d / "_settings.yaml").string()))
+        std::cerr << "Unable to load settings file " << (d / "_settings.yaml").string() << std::endl;
 
     std::ifstream fin;
 

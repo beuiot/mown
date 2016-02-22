@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <boost/filesystem.hpp>
+#include "projectsettings.h"
 #include "article.h"
 #include "articletag.h"
 
@@ -39,6 +40,7 @@ private:
             boost::filesystem::path const & source,
             boost::filesystem::path const & destination);
 
+    ProjectSettings m_Settings;
     std::vector<Article> m_Articles;
     std::vector<Article> m_Pages;
     std::map<std::string, ArticleTag> m_Tags;
