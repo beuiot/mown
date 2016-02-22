@@ -18,10 +18,10 @@
   
   ;Name and file
   Name "${ProgramRegistryName}"
-  OutFile "Mown_win32.exe"
+  OutFile "Mown_win64.exe"
 
   ;Default installation folder
-  InstallDir "$PROGRAMFILES\${ProgramRegistryName}"
+  InstallDir "$PROGRAMFILES64\${ProgramRegistryName}"
   
   ;Get installation folder from registry if available
   InstallDirRegKey HKCU "Software\Beuiot\${ProgramRegistryName}" ""
@@ -122,9 +122,9 @@ SectionIn RO
   SetOutPath "$INSTDIR"
   
   ;ADD YOUR OWN FILES HERE...
-  File "..\mown-win32\${UnityExeName}.exe"
+  File "..\mown-win64\${UnityExeName}.exe"
   ;File /r "${UnityExeName}_Data"
-  File /r ..\mown-win32\*.*
+  File /r ..\mown-win64\*.*
   
   ;Store installation folder
   WriteRegStr HKCU "Software\Beuiot.info\${ProgramRegistryName}" "" $INSTDIR
