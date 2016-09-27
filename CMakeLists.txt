@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 2.8.11)
 
-project(mown)
+project(Mown)
+
+execute_process(
+  COMMAND git --git-dir=${PROJECT_SOURCE_DIR}/.git rev-parse --verify HEAD
+  RESULT_VARIABLE git_returncode
+  OUTPUT_VARIABLE BUILD_HASH
+  ERROR_VARIABLE git_error
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT ${git_returncode} STREQUAL 0)
+  message(FATAL_ERROR "git error ${git_error} ${git_returncode}")
+endif(NOT ${git_returncode} STREQUAL 0)
+string(SUBSTRING ${BUILD_HASH} 0 8 BUILD_HASH)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/config/cmake/")
 # Find includes in corresponding build directories
@@ -56,29 +67,70 @@ find_package(Boost REQUIRED COMPONENTS date_time filesystem system)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src)
 
+
+file(GLOB_RECURSE ALL_SOURCE_FILES src/*.cpp)
+file(GLOB_RECURSE ALL_HEADER_FILES src/*.h)
+
 # Tell CMake to create the mown executable
-add_executable(mown WIN32
-  src/article.cpp
-  src/articletag.cpp
-  src/clickablestatusbar.cpp
-  src/contentfactory.cpp
-  src/main.cpp
-  src/mainwindow.cpp
-  src/mown.cpp
-  src/projectsettings.cpp)
+add_executable(Mown WIN32
+  ${ALL_SOURCE_FILES}
+  ${ALL_HEADER_FILES})
 
-target_link_libraries(mown ${Boost_LIBRARIES})
-
-# Use the modules from Qt 5.
-target_link_libraries(mown Qt5::Widgets)
-target_link_libraries(mown Qt5::WebEngineWidgets)
-
-target_link_libraries(mown ${YAMLCPP_LIBNAME})
+target_link_libraries(Mown
+  ${Boost_LIBRARIES}
+  Qt5::Widgets
+  Qt5::WebEngineWidgets
+  ${YAMLCPP_LIBNAME})
 
 include(WinDeployQt)
-WinDeployQt(TARGET mown COMPILER_RUNTIME INCLUDE_MODULES ${QTLIBS})
+WinDeployQt(TARGET Mown COMPILER_RUNTIME INCLUDE_MODULES ${QTLIBS})
 
-#INSTALL(TARGETS mown DESTINATION ".")
-INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release" DESTINATION ".")
+INSTALL(TARGETS Mown RUNTIME DESTINATION .)
+set(CPACK_PACKAGE_EXECUTABLES Mown "Mown")
+
+if (MSVC)
+  #Windows only: deploy windeployqt files
+  #TODO: try to run WinDeployQt when packaging, so we do not have to copy all these manually
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/bearer" DESTINATION ".")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/iconengines" DESTINATION ".")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/imageformats" DESTINATION ".")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms" DESTINATION ".")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/resources" DESTINATION ".")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/translations" DESTINATION ".")
+  INSTALL(FILES
+    ${QT_DEPLOY_DLLS}
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/D3Dcompiler_47.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/libEGL.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/libGLESV2.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/opengl32sw.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Core.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Gui.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Network.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Qml.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Quick.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Svg.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5WebChannel.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5WebEngineCore.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5WebEngineWidgets.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Widgets.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/QtWebEngineProcess.exe
+    DESTINATION ".")
+endif()
+
+set(CPACK_SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
+set(CPACK_PACKAGE_DESCRIPTION "My Own Website Now!")
+set(CPACK_PACKAGE_VENDOR "Camille Masson")
+set(CPACK_PACKAGE_CONTACT "")
+set(CPACK_PACKAGE_VERSION_MAJOR 0)
+set(CPACK_PACKAGE_VERSION_MINOR 1)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_FILE_NAME "mown-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_MAJOR}-${CMAKE_SYSTEM_NAME}${PLATFORM}-${BUILD_HASH}")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/installer/agreement.txt")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Mown")
+
+#NSIS specifics
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
+set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+set(CPACK_NSIS_DISPLAY_NAME "Mown")
 
 INCLUDE(CPack)
