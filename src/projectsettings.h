@@ -5,14 +5,14 @@
 class ProjectSettings
 {
 public:
-    ProjectSettings();
-    ~ProjectSettings();
+	ProjectSettings();
+	~ProjectSettings();
 
-    bool LoadFromFile(std::string path);
+	bool LoadFromFile(std::string path);
 
-    std::string m_WebsiteName;
-    std::string m_WebsiteDescription;
-    std::string m_Url;
+	std::string m_WebsiteName;
+	std::string m_WebsiteDescription;
+	std::string m_Url;
 };
 
 #endif // PROJECTSETTINGS_H

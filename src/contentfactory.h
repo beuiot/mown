@@ -11,14 +11,14 @@ const std::string kCFYCloseTag = ">";
 class ContentFactory
 {
 public:
-    ContentFactory();
-    ~ContentFactory();
+	ContentFactory();
+	~ContentFactory();
 
-    static std::string ReplaceImageTags(const std::string &input);
-    static std::string ReplaceLinkTags(const std::string &input, bool local);
-    static void ReplaceInString(std::string & source, std::string pattern, const std::string replacement);
+	static std::string ReplaceImageTags(const std::string &input);
+	static std::string ReplaceLinkTags(const std::string &input, bool local);
+	static void ReplaceInString(std::string & source, std::string pattern, const std::string replacement);
 
-    static void SanitizeString(std::string & source);
+	static void SanitizeString(std::string & source);
 
 };
 

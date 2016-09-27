@@ -21,463 +21,463 @@ Mown::~Mown()
 
 bool Mown::Export(const std::string path)
 {
-    boost::filesystem::path sourcePath(path);
+	boost::filesystem::path sourcePath(path);
 
-    std::cout << "Source: " << sourcePath << std::endl;
+	std::cout << "Source: " << sourcePath << std::endl;
 
-    m_Articles.clear();
-    m_Pages.clear();
+	m_Articles.clear();
+	m_Pages.clear();
 
-    if (boost::filesystem::exists(sourcePath)
-            && boost::filesystem::is_directory(sourcePath))
-    {
+	if (boost::filesystem::exists(sourcePath)
+		&& boost::filesystem::is_directory(sourcePath))
+	{
 
-        if (!LoadConfig(path))
-            return false;
+		if (!LoadConfig(path))
+			return false;
 
-        boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-        for ( boost::filesystem::directory_iterator itr(sourcePath);
-            itr != end_itr;
-            ++itr )
-        {
-            if (boost::filesystem::is_regular_file(itr->status()))
-            {
-                boost::filesystem::path filePath = itr->path();
-                if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
-                {
-                    Article article;
-                    article.LoadFromFile(filePath.string());
+		boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+		for (boost::filesystem::directory_iterator itr(sourcePath);
+		itr != end_itr;
+			++itr)
+		{
+			if (boost::filesystem::is_regular_file(itr->status()))
+			{
+				boost::filesystem::path filePath = itr->path();
+				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
+				{
+					Article article;
+					article.LoadFromFile(filePath.string());
 
-                    article.m_LocalPreview = m_LocalPreview;
+					article.m_LocalPreview = m_LocalPreview;
 
-                    if (article.m_IsPage)
-                    {
-                        if (m_ForceAll || !article.m_Ignore)
-                            m_Pages.push_back(article);
-                    }
-                    else
-                        m_Articles.push_back(article);
-                }
-            }
-        }
+					if (article.m_IsPage)
+					{
+						if (m_ForceAll || !article.m_Ignore)
+							m_Pages.push_back(article);
+					}
+					else
+						m_Articles.push_back(article);
+				}
+			}
+		}
 
-        std::sort(m_Articles.begin(), m_Articles.end(), Article::SortByDate);
+		std::sort(m_Articles.begin(), m_Articles.end(), Article::SortByDate);
 
-        boost::filesystem::path exportFolder = sourcePath / "mown-preview";
+		boost::filesystem::path exportFolder = sourcePath / "mown-preview";
 
-        if (!m_LocalPreview)
-            exportFolder = sourcePath / "mown-export";
-
-
-        std::cout << "Will export to " << exportFolder << std::endl;
-
-        if (boost::filesystem::exists(exportFolder))
-        {
-            if (boost::filesystem::is_directory(exportFolder))
-                EmptyFolder(exportFolder.string());
-            else
-            {
-                boost::filesystem::remove(exportFolder);
-                boost::filesystem::create_directory(exportFolder);
-            }
-        }
-        else
-        {
-            boost::filesystem::create_directory(exportFolder);
-        }
-
-        SetupExportFolder(sourcePath.string(), exportFolder.string());
-
-        m_LocalUrl = "file:///" + exportFolder.string() + "/index.html";
-        ContentFactory::ReplaceInString(m_LocalUrl, "\\", "/");
-
-        std::stringstream rssFileContent;
-        rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
-        rssFileContent << "  <channel>" << std::endl << "    <title>" << m_Settings.m_WebsiteName << "</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
-        rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
-
-        for (auto it = m_Articles.begin();
-             it != m_Articles.end();
-             ++it)
-        {
-            if (m_ForceAll || it->m_Ignore == false)
-            {
-                if (!it->m_Hidden)
-                {
-                    AddArticleToTag("Tous les billets", *it);
-
-                    for (auto itTag = it->m_Tags.begin();
-                         itTag != it->m_Tags.end();
-                         ++itTag)
-                        AddArticleToTag(*itTag, *it);
-
-                    rssFileContent << "    <item>" << std::endl;
-                    rssFileContent << "       <title>" << it->m_Title << "</title>" << std::endl;
-                    rssFileContent << "       <link>" << m_Settings.m_Url << it->GetLink() << "</link>" << std::endl;
-                    rssFileContent << "       <description>" << it->FormatExcerpt() << "</description>" << std::endl;
-                    rssFileContent << "       <pubDate>" << it->GetStandardDate() << "</pubDate>" << std::endl;
-                    rssFileContent << "    </item>" << std::endl;
-                }
-                boost::filesystem::path file = exportFolder / it->GetFileName();
-                file.replace_extension(".html");
-
-                std::string fileContent = m_PageTemplate;
-                std::string formatedArticle = it->FormatContent(m_ArticleTemplate, false, m_EnableComments);
-
-                if (m_EnableComments && it->m_Ignore == false)
-                    formatedArticle += m_CommentsTemplate;
-
-                ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
-                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
-                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
+		if (!m_LocalPreview)
+			exportFolder = sourcePath / "mown-export";
 
 
-                std::ofstream fout(file.string());
-                if (fout.is_open())
-                {
-                    fout << fileContent;
-                    fout.close();
-                }
+		std::cout << "Will export to " << exportFolder << std::endl;
 
-                //std::cout << it->Dump(false) << std::endl;
+		if (boost::filesystem::exists(exportFolder))
+		{
+			if (boost::filesystem::is_directory(exportFolder))
+				EmptyFolder(exportFolder.string());
+			else
+			{
+				boost::filesystem::remove(exportFolder);
+				boost::filesystem::create_directory(exportFolder);
+			}
+		}
+		else
+		{
+			boost::filesystem::create_directory(exportFolder);
+		}
 
-            }
-        }
+		SetupExportFolder(sourcePath.string(), exportFolder.string());
 
+		m_LocalUrl = "file:///" + exportFolder.string() + "/index.html";
+		ContentFactory::ReplaceInString(m_LocalUrl, "\\", "/");
 
-        rssFileContent << "  </channel>" << std::endl << "</rss>" << std::endl;
+		std::stringstream rssFileContent;
+		rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
+		rssFileContent << "  <channel>" << std::endl << "    <title>" << m_Settings.m_WebsiteName << "</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
+		rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
 
-        //std::cout << rssFileContent.str() << std::endl;
-        boost::filesystem::path rssFile = exportFolder / "rss.xml";
-        std::ofstream rssFout(rssFile.string());
-        if (rssFout.is_open())
-        {
-            rssFout << rssFileContent.str();
-            rssFout.close();
-        }
+		for (auto it = m_Articles.begin();
+		it != m_Articles.end();
+			++it)
+		{
+			if (m_ForceAll || it->m_Ignore == false)
+			{
+				if (!it->m_Hidden)
+				{
+					AddArticleToTag("Tous les billets", *it);
 
-        for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
-            m_SortedTags.push_back(it->second);
+					for (auto itTag = it->m_Tags.begin();
+					itTag != it->m_Tags.end();
+						++itTag)
+						AddArticleToTag(*itTag, *it);
 
-        std::sort(m_SortedTags.begin(), m_SortedTags.end(), ArticleTag::SortByTitle);
+					rssFileContent << "    <item>" << std::endl;
+					rssFileContent << "       <title>" << it->m_Title << "</title>" << std::endl;
+					rssFileContent << "       <link>" << m_Settings.m_Url << it->GetLink() << "</link>" << std::endl;
+					rssFileContent << "       <description>" << it->FormatExcerpt() << "</description>" << std::endl;
+					rssFileContent << "       <pubDate>" << it->GetStandardDate() << "</pubDate>" << std::endl;
+					rssFileContent << "    </item>" << std::endl;
+				}
+				boost::filesystem::path file = exportFolder / it->GetFileName();
+				file.replace_extension(".html");
 
-        for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
-        {
-            std::string tagList = GenerateTagList(it->m_Name);
-            for (int i = 0; i < it->GetPageCount(); i++)
-            {
-                std::string fileContent = it->FormatArticleListPage(i, m_PageTemplate, m_ArticleTemplate, tagList);
-                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-                ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
+				std::string fileContent = m_PageTemplate;
+				std::string formatedArticle = it->FormatContent(m_ArticleTemplate, false, m_EnableComments);
 
-                boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
-                std::ofstream fout(file.string());
-                if (fout.is_open())
-                {
-                    fout << fileContent;
-                    fout.close();
-                }
-            }
-        }
+				if (m_EnableComments && it->m_Ignore == false)
+					formatedArticle += m_CommentsTemplate;
 
-
-        for (auto it = m_Pages.begin();
-             it != m_Pages.end();
-             ++it)
-        {
-            boost::filesystem::path file = exportFolder / it->GetFileName();
-            file.replace_extension(".html");
-
-            std::string fileContent = m_PageTemplate;
-            std::string formatedArticle = it->FormatContent(m_StandalonePageTemplate, false, m_EnableComments);
-
-            if (m_EnableComments && it->m_Ignore == false)
-                formatedArticle += m_CommentsTemplate;
-
-            ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
-            ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
-            ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-            ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
+				ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
+				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
+				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
+				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 
-            ContentFactory::ReplaceInString(fileContent, "<!-- tags -->", GenerateTagList(it->m_Title));
+				std::ofstream fout(file.string());
+				if (fout.is_open())
+				{
+					fout << fileContent;
+					fout.close();
+				}
+
+				//std::cout << it->Dump(false) << std::endl;
+
+			}
+		}
 
 
-            std::ofstream fout(file.string());
-            if (fout.is_open())
-            {
-                fout << fileContent;
-                fout.close();
-            }
+		rssFileContent << "  </channel>" << std::endl << "</rss>" << std::endl;
 
-            //std::cout << it->Dump(false) << std::endl;
-        }
+		//std::cout << rssFileContent.str() << std::endl;
+		boost::filesystem::path rssFile = exportFolder / "rss.xml";
+		std::ofstream rssFout(rssFile.string());
+		if (rssFout.is_open())
+		{
+			rssFout << rssFileContent.str();
+			rssFout.close();
+		}
 
-    }
-    else
-    {
-        std::cerr << "Unable to open folder" << std::endl;
-        return false;
-    }
+		for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
+			m_SortedTags.push_back(it->second);
 
-    return true;
+		std::sort(m_SortedTags.begin(), m_SortedTags.end(), ArticleTag::SortByTitle);
+
+		for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
+		{
+			std::string tagList = GenerateTagList(it->m_Name);
+			for (int i = 0; i < it->GetPageCount(); i++)
+			{
+				std::string fileContent = it->FormatArticleListPage(i, m_PageTemplate, m_ArticleTemplate, tagList);
+				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
+				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
+
+				boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
+				std::ofstream fout(file.string());
+				if (fout.is_open())
+				{
+					fout << fileContent;
+					fout.close();
+				}
+			}
+		}
+
+
+		for (auto it = m_Pages.begin();
+		it != m_Pages.end();
+			++it)
+		{
+			boost::filesystem::path file = exportFolder / it->GetFileName();
+			file.replace_extension(".html");
+
+			std::string fileContent = m_PageTemplate;
+			std::string formatedArticle = it->FormatContent(m_StandalonePageTemplate, false, m_EnableComments);
+
+			if (m_EnableComments && it->m_Ignore == false)
+				formatedArticle += m_CommentsTemplate;
+
+			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
+			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
+			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
+			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
+
+
+			ContentFactory::ReplaceInString(fileContent, "<!-- tags -->", GenerateTagList(it->m_Title));
+
+
+			std::ofstream fout(file.string());
+			if (fout.is_open())
+			{
+				fout << fileContent;
+				fout.close();
+			}
+
+			//std::cout << it->Dump(false) << std::endl;
+		}
+
+	}
+	else
+	{
+		std::cerr << "Unable to open folder" << std::endl;
+		return false;
+	}
+
+	return true;
 }
 
 void Mown::Dump(bool summary)
 {
-    std::cout << "Tags: ";
-    for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
-    {
-        std::cout << it->second.m_Name << " (" << it->second.m_Articles.size() << ") ";
-    }
-    std::cout << std::endl;
+	std::cout << "Tags: ";
+	for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
+	{
+		std::cout << it->second.m_Name << " (" << it->second.m_Articles.size() << ") ";
+	}
+	std::cout << std::endl;
 }
 
 std::string Mown::GenerateTagList(std::string currentTag)
 {
-    std::stringstream ss;
+	std::stringstream ss;
 
-    if (m_Pages.size() > 0)
-    {
-        ss << "<div class=\"standalonepages\">";
+	if (m_Pages.size() > 0)
+	{
+		ss << "<div class=\"standalonepages\">";
 
-        for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
-        {
-            if (it->m_Title == currentTag)
-                ss << "<span class=\"current_tag\">" << it->m_Title << "</span> ";
-            else
-                ss << "<a href=\"" << it->GetLink() << "\">" << it->m_Title << "</a> ";
-        }
-        ss << "</div>";
-    }
+		for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
+		{
+			if (it->m_Title == currentTag)
+				ss << "<span class=\"current_tag\">" << it->m_Title << "</span> ";
+			else
+				ss << "<a href=\"" << it->GetLink() << "\">" << it->m_Title << "</a> ";
+		}
+		ss << "</div>";
+	}
 
-    ss << "<div class=\"tags\">";
-    for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
-    {
-        if (it->m_Name == currentTag)
-            ss << "<span class=\"current_tag\">" << it->GetPrettyName() << "</span> ";
-        else
-            ss << "<a href=\"" << it->GetLinkForPage(0) << "\">" << it->GetPrettyName() << "</a> ";
-    }
-    ss << "</div>";
+	ss << "<div class=\"tags\">";
+	for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
+	{
+		if (it->m_Name == currentTag)
+			ss << "<span class=\"current_tag\">" << it->GetPrettyName() << "</span> ";
+		else
+			ss << "<a href=\"" << it->GetLinkForPage(0) << "\">" << it->GetPrettyName() << "</a> ";
+	}
+	ss << "</div>";
 
-    return ss.str();
+	return ss.str();
 }
 
 void Mown::AddArticleToTag(std::string tagName, Article article)
 {
-    ArticleTag tag;
-    if (m_Tags.find(tagName) == m_Tags.end())
-    {
-        tag.m_Name = tagName;
-        if (tagName == "Tous les billets")
-            tag.m_IsIndex = true;
-        else
-            tag.m_IsIndex = false;
+	ArticleTag tag;
+	if (m_Tags.find(tagName) == m_Tags.end())
+	{
+		tag.m_Name = tagName;
+		if (tagName == "Tous les billets")
+			tag.m_IsIndex = true;
+		else
+			tag.m_IsIndex = false;
 
-        tag.m_LocalPreview = m_LocalPreview;
-        tag.m_WebsiteRoot = m_WebsiteRoot;
-        tag.m_EnableComments = m_EnableComments;
+		tag.m_LocalPreview = m_LocalPreview;
+		tag.m_WebsiteRoot = m_WebsiteRoot;
+		tag.m_EnableComments = m_EnableComments;
 
-        m_Tags[tagName] = tag;
-    }
+		m_Tags[tagName] = tag;
+	}
 
-    m_Tags[tagName].m_Articles.push_back(article);
+	m_Tags[tagName].m_Articles.push_back(article);
 }
 
 void Mown::EmptyFolder(std::string path)
 {
-    boost::filesystem::path sourcePath(path);
-    if (boost::filesystem::exists(sourcePath)
-            && boost::filesystem::is_directory(sourcePath))
-    {
-        boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-        for ( boost::filesystem::directory_iterator itr(sourcePath);
-            itr != end_itr;
-            ++itr )
-        {
-            if (boost::filesystem::is_directory(itr->status()))
-                boost::filesystem::remove_all(itr->path());
-            else
-                boost::filesystem::remove(itr->path());
-        }
-    }
+	boost::filesystem::path sourcePath(path);
+	if (boost::filesystem::exists(sourcePath)
+		&& boost::filesystem::is_directory(sourcePath))
+	{
+		boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+		for (boost::filesystem::directory_iterator itr(sourcePath);
+		itr != end_itr;
+			++itr)
+		{
+			if (boost::filesystem::is_directory(itr->status()))
+				boost::filesystem::remove_all(itr->path());
+			else
+				boost::filesystem::remove(itr->path());
+		}
+	}
 }
 
 bool Mown::CopyDirectory(
-    boost::filesystem::path const & source,
-    boost::filesystem::path const & destination
-)
+	boost::filesystem::path const & source,
+	boost::filesystem::path const & destination
+	)
 {
-    namespace fs = boost::filesystem;
-    try
-    {
-        // Check whether the function call is valid
-        if(
-            !fs::exists(source) ||
-            !fs::is_directory(source)
-        )
-        {
-            std::cerr << "Source directory " << source.string()
-                << " does not exist or is not a directory." << '\n'
-            ;
-            return false;
-        }
-        if(fs::exists(destination))
-        {
-            std::cerr << "Destination directory " << destination.string()
-                << " already exists." << '\n'
-            ;
-            return false;
-        }
-        // Create the destination directory
-        if(!fs::create_directory(destination))
-        {
-            std::cerr << "Unable to create destination directory"
-                << destination.string() << '\n'
-            ;
-            return false;
-        }
-    }
-    catch(fs::filesystem_error const & e)
-    {
-        std::cerr << e.what() << '\n';
-        return false;
-    }
-    // Iterate through the source directory
-    for(
-        fs::directory_iterator file(source);
-        file != fs::directory_iterator(); ++file
-    )
-    {
-        try
-        {
-            fs::path current(file->path());
-            if(fs::is_directory(current))
-            {
-                // Found directory: Recursion
-                if(
-                    !CopyDirectory(
-                        current,
-                        destination / current.filename()
-                    )
-                )
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                // Found file: Copy
-                fs::copy_file(
-                    current,
-                    destination / current.filename()
-                );
-            }
-        }
-        catch(fs::filesystem_error const & e)
-        {
-            std:: cerr << e.what() << '\n';
-        }
-    }
-    return true;
+	namespace fs = boost::filesystem;
+	try
+	{
+		// Check whether the function call is valid
+		if (
+			!fs::exists(source) ||
+			!fs::is_directory(source)
+			)
+		{
+			std::cerr << "Source directory " << source.string()
+				<< " does not exist or is not a directory." << '\n'
+				;
+			return false;
+		}
+		if (fs::exists(destination))
+		{
+			std::cerr << "Destination directory " << destination.string()
+				<< " already exists." << '\n'
+				;
+			return false;
+		}
+		// Create the destination directory
+		if (!fs::create_directory(destination))
+		{
+			std::cerr << "Unable to create destination directory"
+				<< destination.string() << '\n'
+				;
+			return false;
+		}
+	}
+	catch (fs::filesystem_error const & e)
+	{
+		std::cerr << e.what() << '\n';
+		return false;
+	}
+	// Iterate through the source directory
+	for (
+		fs::directory_iterator file(source);
+		file != fs::directory_iterator(); ++file
+		)
+	{
+		try
+		{
+			fs::path current(file->path());
+			if (fs::is_directory(current))
+			{
+				// Found directory: Recursion
+				if (
+					!CopyDirectory(
+						current,
+						destination / current.filename()
+						)
+					)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				// Found file: Copy
+				fs::copy_file(
+					current,
+					destination / current.filename()
+					);
+			}
+		}
+		catch (fs::filesystem_error const & e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+	}
+	return true;
 }
 
 std::string Mown::GetLocalUrl()
 {
-    return m_LocalUrl;
+	return m_LocalUrl;
 }
 
 bool Mown::LoadConfig(std::string path)
 {
-    boost::filesystem::path d(path);
+	boost::filesystem::path d(path);
 
-    if (!m_Settings.LoadFromFile((d / "_settings.yaml").string()))
-        std::cerr << "Unable to load settings file " << (d / "_settings.yaml").string() << std::endl;
+	if (!m_Settings.LoadFromFile((d / "_settings.yaml").string()))
+		std::cerr << "Unable to load settings file " << (d / "_settings.yaml").string() << std::endl;
 
-    std::ifstream fin;
+	std::ifstream fin;
 
-    fin.open((d / "_article_template.html").string());
-    if (fin.is_open())
-    {
-        std::stringstream buffer;
-        buffer << fin.rdbuf();
-        fin.close();
-        m_ArticleTemplate = buffer.str();
-    }
-    else
-    {
-        std::cerr << "Unable to open template file " << (d / "_article_template.html").string() << std::endl;
-        return false;
-    }
+	fin.open((d / "_article_template.html").string());
+	if (fin.is_open())
+	{
+		std::stringstream buffer;
+		buffer << fin.rdbuf();
+		fin.close();
+		m_ArticleTemplate = buffer.str();
+	}
+	else
+	{
+		std::cerr << "Unable to open template file " << (d / "_article_template.html").string() << std::endl;
+		return false;
+	}
 
-    fin.open((d / "_page_template.html").string());
-    if (fin.is_open())
-    {
-        std::stringstream buffer;
-        buffer << fin.rdbuf();
-        fin.close();
-        m_StandalonePageTemplate = buffer.str();
-    }
-    else
-    {
-        std::cerr << "Unable to open template file " << (d / "_page_template.html").string() << std::endl;
-        return false;
-    }
+	fin.open((d / "_page_template.html").string());
+	if (fin.is_open())
+	{
+		std::stringstream buffer;
+		buffer << fin.rdbuf();
+		fin.close();
+		m_StandalonePageTemplate = buffer.str();
+	}
+	else
+	{
+		std::cerr << "Unable to open template file " << (d / "_page_template.html").string() << std::endl;
+		return false;
+	}
 
-    fin.open((d / "_template.html").string());
-    if (fin.is_open())
-    {
-        std::stringstream buffer;
-        buffer << fin.rdbuf();
-        fin.close();
-        m_PageTemplate = buffer.str();
+	fin.open((d / "_template.html").string());
+	if (fin.is_open())
+	{
+		std::stringstream buffer;
+		buffer << fin.rdbuf();
+		fin.close();
+		m_PageTemplate = buffer.str();
 
-        if (m_LocalPreview)
-            ContentFactory::ReplaceInString(m_PageTemplate, "\"/\"", "\"index.html\"");
-        else
-            ContentFactory::ReplaceInString(m_PageTemplate, "\"/\"", "\"" + m_WebsiteRoot + "\"");
-    }
-    else
-    {
-        std::cerr << "Unable to open template file " << (d / "_template.html").string() << std::endl;
-        return false;
-    }
+		if (m_LocalPreview)
+			ContentFactory::ReplaceInString(m_PageTemplate, "\"/\"", "\"index.html\"");
+		else
+			ContentFactory::ReplaceInString(m_PageTemplate, "\"/\"", "\"" + m_WebsiteRoot + "\"");
+	}
+	else
+	{
+		std::cerr << "Unable to open template file " << (d / "_template.html").string() << std::endl;
+		return false;
+	}
 
-    fin.open((d / "_comments_template.html").string());
-    if (fin.is_open())
-    {
-        std::stringstream buffer;
-        buffer << fin.rdbuf();
-        fin.close();
-        m_CommentsTemplate = buffer.str();
-    }
-    else
-    {
-        std::cerr << "Unable to open template file " << (d / "_comments_template.html").string() << std::endl;
-        return false;
-    }
+	fin.open((d / "_comments_template.html").string());
+	if (fin.is_open())
+	{
+		std::stringstream buffer;
+		buffer << fin.rdbuf();
+		fin.close();
+		m_CommentsTemplate = buffer.str();
+	}
+	else
+	{
+		std::cerr << "Unable to open template file " << (d / "_comments_template.html").string() << std::endl;
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 bool Mown::SetupExportFolder(std::string sourceFolder, std::string targetFolder)
 {
-    boost::filesystem::path from(sourceFolder);
-    boost::filesystem::path to(targetFolder);
+	boost::filesystem::path from(sourceFolder);
+	boost::filesystem::path to(targetFolder);
 
-    boost::filesystem::path styleSheet = from / "style.css";
-    if (boost::filesystem::is_regular_file(styleSheet))
-        boost::filesystem::copy(styleSheet, to / "style.css");
+	boost::filesystem::path styleSheet = from / "style.css";
+	if (boost::filesystem::is_regular_file(styleSheet))
+		boost::filesystem::copy(styleSheet, to / "style.css");
 
-    boost::filesystem::path imageFolder = from / "images";
-    if (boost::filesystem::is_directory(imageFolder))
-    {
-        CopyDirectory(imageFolder, to / "images");
-    }
+	boost::filesystem::path imageFolder = from / "images";
+	if (boost::filesystem::is_directory(imageFolder))
+	{
+		CopyDirectory(imageFolder, to / "images");
+	}
 
 
 
-    return true;
+	return true;
 }
