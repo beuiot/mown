@@ -30,7 +30,7 @@ find_path(YAMLCPP_INCLUDE_DIR
   NAMES yaml-cpp/yaml.h
   PATH_SUFFIXES include
   PATHS
-    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/include
+    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp/include
     ~/Library/Frameworks/yaml-cpp/include/
     /Library/Frameworks/yaml-cpp/include/
     /usr/local/include/
@@ -45,8 +45,8 @@ find_library(YAMLCPP_LIBRARY_RELEASE
   NAMES ${YAMLCPP_STATIC} yaml-cpp libyaml-cppmd.lib
   PATH_SUFFIXES lib64 lib Release RelWithDebInfo
   PATHS
-    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/
-    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/build
+    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp/
+    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp/build
     ~/Library/Frameworks
     /Library/Frameworks
     /usr/local
@@ -61,8 +61,8 @@ find_library(YAMLCPP_LIBRARY_DEBUG
   NAMES ${YAMLCPP_STATIC_DEBUG} yaml-cpp-dbg libyaml-cppmdd.lib
   PATH_SUFFIXES lib64 lib Debug
   PATHS
-    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/
-    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/build
+    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp/
+    ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp/build
     ~/Library/Frameworks
     /Library/Frameworks
     /usr/local

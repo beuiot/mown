@@ -163,7 +163,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QWebView" name="webView">
+     <widget class="QWebEngineView" name="webView">
       <property name="url">
        <url>
         <string>about:blank</string>
@@ -197,9 +197,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QWebView</class>
+   <class>QWebEngineView</class>
    <extends>QWidget</extends>
-   <header>QtWebKitWidgets/QWebView</header>
+   <header>QtWebEngineWidgets/QtWebEngineWidgets</header>
   </customwidget>
   <customwidget>
    <class>ClickableStatusBar</class>
