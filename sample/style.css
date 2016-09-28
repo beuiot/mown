@@ -66,8 +66,9 @@ p.image_legend
   background-color: gray;
 }
 
-div.tags
+div.tags .wrapper
 {
+  display: block;
   border-bottom: 1px solid black;
   margin: 0 0 1em 0;
   padding: 1em 0 0 0;
