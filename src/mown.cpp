@@ -164,10 +164,11 @@ bool Mown::Export(const std::string path)
 
 		for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
 		{
-			std::string tagList = GenerateTagList(it->m_Name);
+			std::string tagLinks = GenerateTagLinks (it->m_Name);
+			std::string pageLinks = GeneratePageLinks (it->m_Name);
 			for (int i = 0; i < it->GetPageCount(); i++)
 			{
-				std::string fileContent = it->FormatArticleListPage(i, m_PageTemplate, m_ArticleTemplate, tagList);
+				std::string fileContent = it->FormatArticleListPage(i, m_PageTemplate, m_ArticleTemplate, tagLinks, pageLinks);
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
@@ -200,9 +201,7 @@ bool Mown::Export(const std::string path)
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
-
-			ContentFactory::ReplaceInString(fileContent, "<!-- tags -->", GenerateTagList(it->m_Title));
-
+			ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->m_Title));
 
 			std::ofstream fout(file.string());
 			if (fout.is_open())
@@ -234,33 +233,36 @@ void Mown::Dump(bool summary)
 	std::cout << std::endl;
 }
 
-std::string Mown::GenerateTagList(std::string currentTag)
+std::string Mown::GenerateTagLinks(std::string currentTag)
 {
 	std::stringstream ss;
 
-	if (m_Pages.size() > 0)
-	{
-		ss << "<div class=\"standalonepages\">";
-
-		for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
-		{
-			if (it->m_Title == currentTag)
-				ss << "<span class=\"current_tag\">" << it->m_Title << "</span> ";
-			else
-				ss << "<a href=\"" << it->GetLink() << "\">" << it->m_Title << "</a> ";
-		}
-		ss << "</div>";
-	}
-
-	ss << "<div class=\"tags\">";
+	ss << "<span class=\"wrapper\">";
 	for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
 	{
 		if (it->m_Name == currentTag)
-			ss << "<span class=\"current_tag\">" << it->GetPrettyName() << "</span> ";
+			ss << "<span class=\"current_tag\">" << it->GetPrettyName () << "</span> ";
 		else
-			ss << "<a href=\"" << it->GetLinkForPage(0) << "\">" << it->GetPrettyName() << "</a> ";
+			ss << "<a href=\"" << it->GetLinkForPage (0) << "\">" << it->GetPrettyName () << "</a> ";
 	}
-	ss << "</div>";
+	ss << "</span>";
+
+	return ss.str();
+}
+
+std::string Mown::GeneratePageLinks(std::string currentPage)
+{
+	std::stringstream ss;
+
+	ss << "<span class=\"wrapper\">";
+	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
+	{
+		if (it->m_Title == currentPage)
+			ss << "<span class=\"current_page\">" << it->m_Title << "</span> ";
+		else
+			ss << "<a href=\"" << it->GetLink () << "\">" << it->m_Title << "</a> ";
+	}
+	ss << "</span>";
 
 	return ss.str();
 }

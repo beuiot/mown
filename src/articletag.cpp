@@ -111,7 +111,7 @@ std::vector<Article> ArticleTag::GetPageArticles(int page)
 	return result;
 }
 
-std::string ArticleTag::FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagList)
+std::string ArticleTag::FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagLinks, const std::string & pageLinks)
 {
 	std::stringstream ss;
 	std::vector<Article> articles = GetPageArticles(page);
@@ -128,7 +128,8 @@ std::string ArticleTag::FormatArticleListPage(int page, const std::string & page
 		pageList = GeneratePageList(page);
 
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- pagelist -->", pageList);
-	ContentFactory::ReplaceInString(formatedArticles, "<!-- tags -->", tagList);
+	ContentFactory::ReplaceInString(formatedArticles, "<!-- taglinks -->", tagLinks);
+	ContentFactory::ReplaceInString(formatedArticles, "<!-- pagelinks -->", pageLinks);
 
 	return formatedArticles;
 }

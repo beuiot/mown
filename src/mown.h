@@ -27,7 +27,8 @@ public:
 
 private:
 	void AddArticleToTag(std::string tagName, Article article);
-	std::string GenerateTagList(std::string currentTag);
+	std::string GenerateTagLinks(std::string currentTag);
+	std::string GeneratePageLinks(std::string currentPage);
 
 	bool LoadConfig(std::string path);
 	bool SetupExportFolder(std::string sourceFolder, std::string targetFolder);
