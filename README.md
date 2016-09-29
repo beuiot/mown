@@ -23,10 +23,10 @@
 
 ```sh
 (in mown repository root)
-$ git submodules update --init
+$ git submodule update --init
 $ cd dependencies\yaml-cpp
 $ mkdir build && cd build
-$ cmake -S "Visual Studio 14 2015 Win64" .. -DCMAKE_GENERATOR_PLATFORM=x64
+$ cmake -G "Visual Studio 14 2015 Win64" ..
 $ cmake --build . --config Debug
 $ cmake --build . --config Release
 ```
@@ -37,7 +37,7 @@ $ cmake --build . --config Release
 ```sh
 $ (in mown repository root)
 $ mkdir build && cd build
-$ cmake -S "Visual Studio 14 2015 Win64" .. -DCMAKE_GENERATOR_PLATFORM=x64
+$ cmake -G "Visual Studio 14 2015 Win64" ..
 $ cmake --build .
 ```
 
