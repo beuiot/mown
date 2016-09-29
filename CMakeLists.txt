@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 2.8.11)
 
 project(Mown)
 
-#Generate version (format: v0.1-beta.2)
+###################################################
+########      SETUP PROJECT VARIABLES      ########
+###################################################
+
+### Generate version name (format: v0.1-beta.2)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
 set(VERSION_SUFFIX_NAME "") #alpha, beta, patch. Empty for releases.
@@ -14,6 +18,16 @@ else()
   set(LONG_VERSION "v${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_SUFFIX_NAME}.${VERSION_SUFFIX_NUMBER}")
 endif()
 
+### Check if build is 32 or 64 bits
+if(CMAKE_SIZEOF_VOID_P MATCHES 8)
+    set(PLATFORM 64)
+    MESSAGE(STATUS "Detected 64-bit platform")
+else()
+    set(PLATFORM 32)
+    MESSAGE(STATUS "Detected 32-bit platform")
+endif()
+
+### Retrieve build hash from Git
 execute_process(
   COMMAND git --git-dir=${PROJECT_SOURCE_DIR}/.git rev-parse --verify HEAD
   RESULT_VARIABLE git_returncode
@@ -25,26 +39,27 @@ if(NOT ${git_returncode} STREQUAL 0)
 endif(NOT ${git_returncode} STREQUAL 0)
 string(SUBSTRING ${BUILD_HASH} 0 8 BUILD_HASH)
 
+
+###################################################
+########        CMAKE CONFIGURATION        ########
+###################################################
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/config/cmake/")
-# Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+###################################################
+########        PROJECT DEPENDENCIES       ########
+###################################################
+
+### Qt ###
 # Instruct CMake to run moc and generate .ui file headers automatically when needed.
 set(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTOUIC ON)  
 
-if(CMAKE_SIZEOF_VOID_P MATCHES 8)
-    set(PLATFORM 64)
-    MESSAGE(STATUS "Detected 64-bit platform")
-else()
-    set(PLATFORM 32)
-    MESSAGE(STATUS "Detected 32-bit platform")
-endif()
-
-# Find the used Qt libraries
 find_package(Qt5Widgets)
 find_package(Qt5WebEngineWidgets)
 
-# Find yaml-cpp
+### YamlCpp ###
 set(YAMLCPP_USE_STATIC_LIBS ON CACHE BOOL "If true, will try to find static YamlCpp first instead of dynamic.")
 find_package(YamlCpp)
 if(NOT YAMLCPP_FOUND)
@@ -61,13 +76,14 @@ else()
 	message(FATAL_ERROR "You need yamlcpp to build this, build yamlcpp in the 'dependencies/' directory, or install it as a system package")
 endif()
 
-# Find boost
-set(Boost_USE_STATIC_LIBS        ON) # only find static libs
+### Boost ###
+set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
 
 if(DEFINED ENV{BOOST_ROOT})
   set(BOOST_ROOT $ENV{BOOST_ROOT})
+  # Automatically find pre-built windows versions of Boost
   if (MSVC14)
     set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib${PLATFORM}-msvc-14.0)
   endif()
@@ -76,14 +92,15 @@ endif()
 find_package(Boost REQUIRED COMPONENTS date_time filesystem system)
 
 
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(src)
+###################################################
+########    ADD FILES, COMPILE AND LINK    ########
+###################################################
 
+include_directories(src ${Boost_INCLUDE_DIRS})
 
 file(GLOB_RECURSE ALL_SOURCE_FILES src/*.cpp)
 file(GLOB_RECURSE ALL_HEADER_FILES src/*.h)
 
-# Tell CMake to create the mown executable
 add_executable(Mown WIN32
   ${ALL_SOURCE_FILES}
   ${ALL_HEADER_FILES})
@@ -94,8 +111,20 @@ target_link_libraries(Mown
   Qt5::WebEngineWidgets
   ${YAMLCPP_LIBNAME})
 
-include(WinDeployQt)
-WinDeployQt(TARGET Mown COMPILER_RUNTIME INCLUDE_MODULES ${QTLIBS})
+
+###################################################
+########        WINDEPLOYQT TARGET         ########
+###################################################
+
+if(WIN32)
+  include(WinDeployQt)
+  WinDeployQt(TARGET Mown COMPILER_RUNTIME INCLUDE_MODULES ${QTLIBS})
+endif()
+
+
+###################################################
+########            INSTALLER              ########
+###################################################
 
 INSTALL(TARGETS Mown RUNTIME DESTINATION .)
 set(CPACK_PACKAGE_EXECUTABLES Mown "Mown")
