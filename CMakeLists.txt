@@ -83,10 +83,12 @@ set(Boost_USE_STATIC_RUNTIME    OFF)
 
 if(DEFINED ENV{BOOST_ROOT})
   set(BOOST_ROOT $ENV{BOOST_ROOT})
-  # Automatically find pre-built windows versions of Boost
-  if (MSVC14)
-    set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib${PLATFORM}-msvc-14.0)
-  endif()
+endif()
+
+# Automatically find pre-built windows versions of Boost
+if (MSVC14)
+  set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib${PLATFORM}-msvc-14.0)
+  message(STATUS "Boost library dir: ${BOOST_LIBRARYDIR}")
 endif()
 
 find_package(Boost REQUIRED COMPONENTS date_time filesystem system)
