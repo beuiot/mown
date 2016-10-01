@@ -270,5 +270,9 @@ void MainWindow::on_webView_urlChanged(const QUrl& url)
 	std::string sourceFile = m_Mown.GetSourceFilenameForPreviewFile(url.fileName().toStdString());
 	std::cout << url.fileName().toStdString() << " has source file " << sourceFile << std::endl;
 	m_CurrentSourceFile = sourceFile;
-	ui->openSourceFileButton->setText(QString::fromStdString(m_CurrentSourceFile));
+
+	QFileInfo fileInfo(QString::fromStdString(m_CurrentSourceFile));
+	ui->openSourceFileButton->setText(fileInfo.fileName());
+
+	ui->openSourceFileButton->setVisible(!sourceFile.empty());
 }
