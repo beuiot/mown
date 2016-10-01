@@ -104,7 +104,10 @@ bool MainWindow::CanExport()
 void MainWindow::on_exportButton_clicked()
 {
 	if (CanExport())
+	{
 		Export(false);
+		QDesktopServices::openUrl(QUrl::fromUserInput(QString::fromStdString(m_CurrentProjectFolder + "/mown-export")));
+	}
 }
 
 void MainWindow::Load(std::string path)
@@ -141,6 +144,11 @@ void MainWindow::on_openSourceFileButton_clicked()
 {
 	std::cout << "Opening " << m_CurrentSourceFile << std::endl;
 	QDesktopServices::openUrl(QUrl::fromUserInput(QString::fromStdString(m_CurrentSourceFile)));
+}
+
+void MainWindow::on_openSourceFolderButton_clicked()
+{
+	QDesktopServices::openUrl(QUrl::fromUserInput(QString::fromStdString(m_CurrentProjectFolder)));
 }
 
 void MainWindow::UpdateWatcher(const QString & fileName)

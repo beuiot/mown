@@ -48,6 +48,7 @@ private:
 	void on_exportButton_clicked();
 	void on_loadButton_clicked();
 	void on_openSourceFileButton_clicked();
+	void on_openSourceFolderButton_clicked();
 	void fileChangedSlot(QString path);
 	void directoryChangedSlot(QString path);
 	void exportTimerTimeout();
