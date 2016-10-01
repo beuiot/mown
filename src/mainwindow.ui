@@ -159,12 +159,19 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="6">
+        <widget class="QPushButton" name="openSourceFileButton">
+         <property name="text">
+          <string>PushButton</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
     <item>
-     <widget class="QWebEngineView" name="webView">
-      <property name="url">
+     <widget class="QWebEngineView" name="webView" native="true">
+      <property name="url" stdset="0">
        <url>
         <string>about:blank</string>
        </url>

@@ -233,6 +233,37 @@ void Mown::Dump(bool summary)
 	std::cout << std::endl;
 }
 
+std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
+{
+	std::string result = "";
+
+	size_t extensionPosition = previewFile.rfind(".html");
+	if (extensionPosition != std::string::npos)
+	{
+		previewFile = previewFile.substr(0, extensionPosition);
+	}
+
+	for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
+	{
+		if (it->GetFileName() == previewFile)
+		{
+			result = it->GetSourceFilePath();
+			break;
+		}
+	}
+
+	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
+	{
+		if (it->GetFileName() == previewFile)
+		{
+			result = it->GetSourceFilePath();
+			break;
+		}
+	}
+
+	return result;
+}
+
 std::string Mown::GenerateTagLinks(std::string currentTag)
 {
 	std::stringstream ss;

@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <string>
 #include "qdebugstream.h"
+#include "mown.h"
 
 namespace Ui {
 	class MainWindow;
@@ -21,8 +22,10 @@ public:
 
 private:
 	Ui::MainWindow *ui;
+	Mown m_Mown;
 	std::string m_CurrentProjectFolder;
 	std::string m_CurrentLocalUrl;
+	std::string m_CurrentSourceFile;
 	void Load(std::string path);
 	void Export(bool local);
 	void DelayedExport();
@@ -44,6 +47,7 @@ private:
 	private slots:
 	void on_exportButton_clicked();
 	void on_loadButton_clicked();
+	void on_openSourceFileButton_clicked();
 	void fileChangedSlot(QString path);
 	void directoryChangedSlot(QString path);
 	void exportTimerTimeout();
@@ -54,6 +58,7 @@ private:
 	void on_indexButton_clicked();
 	void on_showConsoleButton_clicked();
 	void on_serverPath_editingFinished();
+	void on_webView_urlChanged(const QUrl& url);
 };
 
 #endif // MAINWINDOW_H

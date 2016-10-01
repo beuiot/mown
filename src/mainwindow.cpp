@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "mown.h"
 #include "qdebugstream.h"
 #include <QFileDialog>
 #include <QDir>
@@ -138,6 +137,12 @@ void MainWindow::on_loadButton_clicked()
 	}
 }
 
+void MainWindow::on_openSourceFileButton_clicked()
+{
+	std::cout << "Opening " << m_CurrentSourceFile << std::endl;
+	QDesktopServices::openUrl(QUrl::fromUserInput(QString::fromStdString(m_CurrentSourceFile)));
+}
+
 void MainWindow::UpdateWatcher(const QString & fileName)
 {
 	m_Watcher.removePaths(m_Watcher.directories());
@@ -179,23 +184,22 @@ void MainWindow::exportTimerTimeout()
 
 void MainWindow::Export(bool local)
 {
-	Mown be;
-	be.m_ForceAll = ui->forceAll->isChecked();
-	be.m_EnableComments = ui->enableComments->isChecked() && !local;
-	be.m_LocalPreview = local;
-	be.m_WebsiteRoot = ui->serverPath->text().toStdString();
+	m_Mown.m_ForceAll = ui->forceAll->isChecked();
+	m_Mown.m_EnableComments = ui->enableComments->isChecked() && !local;
+	m_Mown.m_LocalPreview = local;
+	m_Mown.m_WebsiteRoot = ui->serverPath->text().toStdString();
 
-	if (be.Export(m_CurrentProjectFolder))
+	if (m_Mown.Export(m_CurrentProjectFolder))
 	{
 
 		if (local)
 		{
-			m_CurrentLocalUrl = be.GetLocalUrl();
+			m_CurrentLocalUrl = m_Mown.GetLocalUrl();
 			ui->webView->reload();
 		}
 
 		UpdateWatcher(m_CurrentProjectFolder.c_str());
-		be.Dump(false);
+		m_Mown.Dump(false);
 	}
 }
 
@@ -251,4 +255,12 @@ void MainWindow::on_serverPath_editingFinished()
 		return;
 
 	SaveSettings();
+}
+
+void MainWindow::on_webView_urlChanged(const QUrl& url)
+{
+	std::string sourceFile = m_Mown.GetSourceFilenameForPreviewFile(url.fileName().toStdString());
+	std::cout << url.fileName().toStdString() << " has source file " << sourceFile << std::endl;
+	m_CurrentSourceFile = sourceFile;
+	ui->openSourceFileButton->setText(QString::fromStdString(m_CurrentSourceFile));
 }

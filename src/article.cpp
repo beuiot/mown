@@ -21,6 +21,7 @@ Article::~Article()
 
 bool Article::LoadFromFile(std::string path)
 {
+	m_SourceFilePath = path;
 	std::ifstream file(path);
 
 	if (!file.is_open())
@@ -91,6 +92,12 @@ bool Article::LoadFromFile(std::string path)
 	}
 
 	return true;
+}
+
+
+std::string Article::GetSourceFilePath()
+{
+	return m_SourceFilePath;
 }
 
 std::string Article::Dump(bool showContent)

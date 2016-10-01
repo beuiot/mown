@@ -18,6 +18,8 @@ public:
 	bool Export(std::string path);
 	void Dump(bool summary);
 
+	std::string GetSourceFilenameForPreviewFile(std::string previewFile);
+
 	bool m_LocalPreview;
 	bool m_EnableComments;
 	bool m_ForceAll;

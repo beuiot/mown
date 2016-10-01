@@ -12,6 +12,7 @@ public:
 	~Article();
 
 	bool LoadFromFile(std::string path);
+	std::string GetSourceFilePath();
 	std::string GetFileName();
 	std::string GetLink();
 	std::string GetStandardDate();
@@ -32,6 +33,9 @@ public:
 	std::string m_Content;
 
 	static bool SortByDate(const Article &lhs, const Article& rhs);
+
+private:
+	std::string m_SourceFilePath;
 };
 
 #endif // ARTICLE_H
