@@ -50,6 +50,11 @@ function(WinDeployQt)
 		message(STATUS "not set, the VC++ redistributable installer will NOT be bundled")
 	endif()
 
+	add_custom_command(TARGET ${_deploy_TARGET}
+		POST_BUILD
+		COMMAND ${_deploy_PROGRAM} ${_ARGS}
+		$<TARGET_FILE:${_deploy_TARGET}>)
+
 	add_custom_target(windeployqt ${_deploy_PROGRAM} ${_ARGS}
 		$<TARGET_FILE:${_deploy_TARGET}>
 		DEPENDS ${_deploy_TARGET})
