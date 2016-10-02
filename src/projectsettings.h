@@ -9,6 +9,8 @@ public:
 	~ProjectSettings();
 
 	bool LoadFromFile(std::string path);
+	bool SaveToFile(std::string path);
+	void SetDefaultValues();
 
 	std::string m_WebsiteName;
 	std::string m_WebsiteDescription;

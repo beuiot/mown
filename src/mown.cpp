@@ -435,10 +435,12 @@ std::string Mown::GetLocalUrl()
 
 bool Mown::LoadConfig(std::string path)
 {
+	std::string filePath;
 	boost::filesystem::path d(path);
 
-	if (!m_Settings.LoadFromFile((d / "_settings.yaml").string()))
-		std::cerr << "Unable to load settings file " << (d / "_settings.yaml").string() << std::endl;
+	filePath = (d / "_settings.yaml").string();
+	if (!m_Settings.LoadFromFile(filePath) && !m_Settings.SaveToFile(filePath))
+		std::cerr << "Unable to load or create settings file " << (d / "_settings.yaml").string() << std::endl;
 
 	std::ifstream fin;
 
