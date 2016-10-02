@@ -28,6 +28,7 @@ public:
 	std::string GetLocalUrl();
 
 private:
+	void Cleanup();
 	void AddArticleToTag(std::string tagName, Article article);
 	std::string GenerateTagLinks(std::string currentTag);
 	std::string GeneratePageLinks(std::string currentPage);

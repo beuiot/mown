@@ -21,6 +21,8 @@ Mown::~Mown()
 
 bool Mown::Export(const std::string path)
 {
+	Cleanup();
+
 	boost::filesystem::path sourcePath(path);
 
 	std::cout << "Source: " << sourcePath << std::endl;
@@ -296,6 +298,15 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 	ss << "</span>";
 
 	return ss.str();
+}
+
+void Mown::Cleanup()
+{
+	m_Pages.clear();
+	m_Articles.clear();
+	m_Tags.clear();
+	m_SortedTags.clear();
+	m_Settings.SetDefaultValues();
 }
 
 void Mown::AddArticleToTag(std::string tagName, Article article)
