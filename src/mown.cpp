@@ -123,11 +123,11 @@ bool Mown::Export(const std::string path)
 				boost::filesystem::path file = exportFolder / it->GetFileName();
 				file.replace_extension(".html");
 
-				std::string fileContent = m_PageTemplate;
-				std::string formatedArticle = it->FormatContent(m_ArticleTemplate, false, m_EnableComments);
+				std::string fileContent = m_ProjectFiles.GetMainTemplate();
+				std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetArticleTemplate(), false, m_EnableComments);
 
 				if (m_EnableComments && it->m_Ignore == false)
-					formatedArticle += m_CommentsTemplate;
+					formatedArticle += m_ProjectFiles.GetCommentsTemplate();
 
 				ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
@@ -170,7 +170,7 @@ bool Mown::Export(const std::string path)
 			std::string pageLinks = GeneratePageLinks (it->m_Name);
 			for (int i = 0; i < it->GetPageCount(); i++)
 			{
-				std::string fileContent = it->FormatArticleListPage(i, m_PageTemplate, m_ArticleTemplate, tagLinks, pageLinks);
+				std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks);
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
@@ -192,11 +192,11 @@ bool Mown::Export(const std::string path)
 			boost::filesystem::path file = exportFolder / it->GetFileName();
 			file.replace_extension(".html");
 
-			std::string fileContent = m_PageTemplate;
-			std::string formatedArticle = it->FormatContent(m_StandalonePageTemplate, false, m_EnableComments);
+			std::string fileContent = m_ProjectFiles.GetMainTemplate();
+			std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetPageTemplate(), false, m_EnableComments);
 
 			if (m_EnableComments && it->m_Ignore == false)
-				formatedArticle += m_CommentsTemplate;
+				formatedArticle += m_ProjectFiles.GetCommentsTemplate();
 
 			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
@@ -435,6 +435,8 @@ std::string Mown::GetLocalUrl()
 
 bool Mown::LoadConfig(std::string path)
 {
+	m_ProjectFiles.SetProjectPath(path);
+
 	std::string filePath;
 	boost::filesystem::path d(path);
 
@@ -442,68 +444,19 @@ bool Mown::LoadConfig(std::string path)
 	if (!m_Settings.LoadFromFile(filePath) && !m_Settings.SaveToFile(filePath))
 		std::cerr << "Unable to load or create settings file " << (d / "_settings.yaml").string() << std::endl;
 
-	std::ifstream fin;
+	bool autoCreateFiles = true;
 
-	fin.open((d / "_article_template.html").string());
-	if (fin.is_open())
-	{
-		std::stringstream buffer;
-		buffer << fin.rdbuf();
-		fin.close();
-		m_ArticleTemplate = buffer.str();
-	}
-	else
-	{
-		std::cerr << "Unable to open template file " << (d / "_article_template.html").string() << std::endl;
+	if (!m_ProjectFiles.LoadArticleTemplate(autoCreateFiles))
 		return false;
-	}
 
-	fin.open((d / "_page_template.html").string());
-	if (fin.is_open())
-	{
-		std::stringstream buffer;
-		buffer << fin.rdbuf();
-		fin.close();
-		m_StandalonePageTemplate = buffer.str();
-	}
-	else
-	{
-		std::cerr << "Unable to open template file " << (d / "_page_template.html").string() << std::endl;
+	if (!m_ProjectFiles.LoadPageTemplate(autoCreateFiles))
 		return false;
-	}
 
-	fin.open((d / "_template.html").string());
-	if (fin.is_open())
-	{
-		std::stringstream buffer;
-		buffer << fin.rdbuf();
-		fin.close();
-		m_PageTemplate = buffer.str();
-
-		if (m_LocalPreview)
-			ContentFactory::ReplaceInString(m_PageTemplate, "\"/\"", "\"index.html\"");
-		else
-			ContentFactory::ReplaceInString(m_PageTemplate, "\"/\"", "\"" + m_WebsiteRoot + "\"");
-	}
-	else
-	{
-		std::cerr << "Unable to open template file " << (d / "_template.html").string() << std::endl;
+	if (!m_ProjectFiles.LoadMainTemplate(autoCreateFiles, (m_LocalPreview ? "index.html" : m_WebsiteRoot)))
 		return false;
-	}
 
-	fin.open((d / "_comments_template.html").string());
-	if (fin.is_open())
-	{
-		std::stringstream buffer;
-		buffer << fin.rdbuf();
-		fin.close();
-		m_CommentsTemplate = buffer.str();
-	}
-	else
-	{
-		std::cerr << "Unable to open template file " << (d / "_comments_template.html").string() << std::endl;
+	if (!m_ProjectFiles.LoadCommentsTemplate(autoCreateFiles))
 		return false;
-	}
 
 	return true;
 }

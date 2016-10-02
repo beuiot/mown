@@ -8,6 +8,7 @@
 #include "projectsettings.h"
 #include "article.h"
 #include "articletag.h"
+#include "projectfiles.h"
 
 class Mown
 {
@@ -50,10 +51,7 @@ private:
 	std::map<std::string, ArticleTag> m_Tags;
 	std::vector<ArticleTag> m_SortedTags;
 
-	std::string m_PageTemplate;
-	std::string m_ArticleTemplate;
-	std::string m_StandalonePageTemplate;
-	std::string m_CommentsTemplate;
+	ProjectFiles m_ProjectFiles;
 };
 
 #endif // BLOGEXPORTER_H
