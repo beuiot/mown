@@ -166,8 +166,8 @@ bool Mown::Export(const std::string path)
 
 		for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
 		{
-			std::string tagLinks = GenerateTagLinks (it->m_Name);
-			std::string pageLinks = GeneratePageLinks (it->m_Name);
+			std::string tagLinks = GenerateTagLinks(it->m_Name);
+			std::string pageLinks = GeneratePageLinks(it->m_Name);
 			for (int i = 0; i < it->GetPageCount(); i++)
 			{
 				std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks);
@@ -274,9 +274,9 @@ std::string Mown::GenerateTagLinks(std::string currentTag)
 	for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
 	{
 		if (it->m_Name == currentTag)
-			ss << "<span class=\"current_tag\">" << it->GetPrettyName () << "</span> ";
+			ss << "<span class=\"current_tag\">" << it->GetPrettyName() << "</span> ";
 		else
-			ss << "<a href=\"" << it->GetLinkForPage (0) << "\">" << it->GetPrettyName () << "</a> ";
+			ss << "<a href=\"" << it->GetLinkForPage(0) << "\">" << it->GetPrettyName() << "</a> ";
 	}
 	ss << "</span>";
 
@@ -293,7 +293,7 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 		if (it->m_Title == currentPage)
 			ss << "<span class=\"current_page\">" << it->m_Title << "</span> ";
 		else
-			ss << "<a href=\"" << it->GetLink () << "\">" << it->m_Title << "</a> ";
+			ss << "<a href=\"" << it->GetLink() << "\">" << it->m_Title << "</a> ";
 	}
 	ss << "</span>";
 
@@ -478,8 +478,6 @@ bool Mown::SetupExportFolder(std::string sourceFolder, std::string targetFolder)
 	{
 		CopyDirectory(imageFolder, to / "images");
 	}
-
-
 
 	return true;
 }
