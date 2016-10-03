@@ -230,6 +230,53 @@ bool Mown::Export(const std::string path)
 	return true;
 }
 
+bool Mown::PathHasNewContent(std::string path)
+{
+	boost::filesystem::path sourcePath(path);
+	if (boost::filesystem::exists(sourcePath)
+		&& boost::filesystem::is_directory(sourcePath))
+	{
+		boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+		for (boost::filesystem::directory_iterator itr(sourcePath);
+		itr != end_itr;
+			++itr)
+		{
+			if (boost::filesystem::is_regular_file(itr->status()))
+			{
+				boost::filesystem::path filePath = itr->path();
+				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
+				{
+					std::string filePathStr = filePath.string();
+
+					bool found = false;
+
+					for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
+					{
+						if (it->GetSourceFilePath() == filePathStr)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
+					{
+						if(it->GetSourceFilePath() == filePathStr)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 void Mown::Dump(bool summary)
 {
 	std::cout << "Tags: ";

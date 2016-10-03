@@ -17,6 +17,7 @@ public:
 	~Mown();
 
 	bool Export(std::string path);
+	bool PathHasNewContent(std::string path);
 	void Dump(bool summary);
 
 	std::string GetSourceFilenameForPreviewFile(std::string previewFile);
