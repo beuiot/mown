@@ -435,7 +435,7 @@ std::string Mown::GetLocalUrl()
 
 bool Mown::LoadConfig(std::string path)
 {
-	m_ProjectFiles.SetProjectPath(path);
+	m_ProjectFiles.Configure(path, true);
 
 	std::string filePath;
 	boost::filesystem::path d(path);
@@ -446,16 +446,19 @@ bool Mown::LoadConfig(std::string path)
 
 	bool autoCreateFiles = true;
 
-	if (!m_ProjectFiles.LoadArticleTemplate(autoCreateFiles))
+	if (!m_ProjectFiles.LoadMainTemplate((m_LocalPreview ? "index.html" : m_WebsiteRoot)))
 		return false;
 
-	if (!m_ProjectFiles.LoadPageTemplate(autoCreateFiles))
+	if (!m_ProjectFiles.LoadArticleTemplate())
 		return false;
 
-	if (!m_ProjectFiles.LoadMainTemplate(autoCreateFiles, (m_LocalPreview ? "index.html" : m_WebsiteRoot)))
+	if (!m_ProjectFiles.LoadPageTemplate())
 		return false;
 
-	if (!m_ProjectFiles.LoadCommentsTemplate(autoCreateFiles))
+	if (!m_ProjectFiles.LoadCommentsTemplate())
+		return false;
+
+	if (!m_ProjectFiles.CreateStyleSheetIfNecessary())
 		return false;
 
 	return true;

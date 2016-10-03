@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 
+
 ProjectFiles::ProjectFiles()
 {
 }
@@ -16,124 +17,57 @@ ProjectFiles::~ProjectFiles()
 
 }
 
-void ProjectFiles::SetProjectPath(std::string projectPath)
+void ProjectFiles::Configure(std::string projectPath, bool createIfMissing)
 {
 	m_ProjectPath = projectPath;
+	m_CreateIfMissing = createIfMissing;
 }
 
-bool ProjectFiles::LoadMainTemplate(bool createIfMissing, std::string websiteRoot)
+bool ProjectFiles::LoadMainTemplate(std::string websiteRoot)
 {
-	m_MainTemplate = LoadFile("_template.html");
+	bool result = LoadTemplate(
+		kPFMainTemplateFileName,
+		m_MainTemplate,
+		std::bind(&ProjectFiles::GetMainTemplateDefaultContent, *this));
 
-	if (m_MainTemplate.empty() && createIfMissing)
+	if (result)
 	{
-		std::stringstream ss;
-
-		ss << "--- <b>Main template begin</b><hr>" << std::endl;
-		ss << "Website name: <a href=\"/\"><!-- head.m_WebsiteName --></a><hr>" << std::endl;
-		ss << "Title: <!-- head.m_Title --><hr>" << std::endl;
-		ss << "Website description: <!-- head.m_WebsiteDescription --><hr>" << std::endl;
-		ss << "Page links: <!-- pagelinks --><hr>" << std::endl;
-		ss << "Tag links: <!-- taglinks --><hr>" << std::endl;
-		ss << "Page list: <!-- pagelist --><hr>" << std::endl;
-		ss << "Content: <!-- content --><hr>" << std::endl;
-		ss << "--- <b>Main template end</b><br />" << std::endl;
-
-		m_MainTemplate = ss.str();
-
-		WriteFile("_template.html", m_MainTemplate);
+		ContentFactory::ReplaceInString(m_MainTemplate, "\"/\"", "\"" + websiteRoot + "\"");
 	}
-
-	if (m_MainTemplate.empty())
-	{
-		std::cerr << "Unable to open template file " << "_template.html" << std::endl;
-		return false;
-	}
-
-	ContentFactory::ReplaceInString(m_MainTemplate, "\"/\"", "\"" + websiteRoot + "\"");
-
-	return true;
+	return result;
 }
 
-bool ProjectFiles::LoadArticleTemplate(bool createIfMissing)
+bool ProjectFiles::LoadArticleTemplate()
 {
-	m_ArticleTemplate = LoadFile("_article_template.html");
-
-	if(m_ArticleTemplate.empty() && createIfMissing)
-	{
-		std::stringstream ss;
-
-		ss << "--- <b>Article template begin</b><hr>" << std::endl;
-		ss << "Date: <!-- m_Date.day -->&nbsp; <!-- m_Date.month -->&nbsp; <!-- m_Date.year --><hr>" << std::endl;
-		ss << "Title: <!-- m_Title --><hr>" << std::endl;
-		ss << "Content: <!-- m_Content --><hr>" << std::endl;
-		ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
-		ss << "Tags: <!-- m_Tags --><hr>" << std::endl;
-		ss << "--- <b>Article template end</b><br />" << std::endl;
-
-		m_ArticleTemplate = ss.str();
-
-		WriteFile("_article_template.html", m_ArticleTemplate);
-	}
-
-	if (m_ArticleTemplate.empty())
-	{
-		std::cerr << "Unable to open template file " << "_article_template.html" << std::endl;
-		return false;
-	}
-
-	return true;
+	return LoadTemplate(
+		kPFArticleTemplateFileName,
+		m_ArticleTemplate,
+		std::bind(&ProjectFiles::GetArticleTemplateDefaultContent, *this));
 }
 
-bool ProjectFiles::LoadPageTemplate(bool createIfMissing)
+bool ProjectFiles::LoadPageTemplate()
 {
-	m_PageTemplate = LoadFile("_page_template.html");
-
-	if (m_PageTemplate.empty() && createIfMissing)
-	{
-		std::stringstream ss;
-
-		ss << "--- <b>Page template begin</b><hr>" << std::endl;
-		ss << "Title: <!-- m_Title --><hr>" << std::endl;
-		ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
-		ss << "--- <b>Page template end</b><br />" << std::endl;
-
-		m_PageTemplate = ss.str();
-
-		WriteFile("_page_template.html", m_PageTemplate);
-	}
-
-	if (m_PageTemplate.empty())
-	{
-		std::cerr << "Unable to open template file " << "_page_template.html" << std::endl;
-		return false;
-	}
-
-	return true;
+	return LoadTemplate(
+		kPFPageTemplateFileName,
+		m_PageTemplate,
+		std::bind(&ProjectFiles::GetPageTemplateDefaultContent, *this));
 }
 
-bool ProjectFiles::LoadCommentsTemplate(bool createIfMissing)
+bool ProjectFiles::LoadCommentsTemplate()
 {
-	m_CommentsTemplate = LoadFile("_comments_template.html");
+	return LoadTemplate(
+		kPFCommentsTemplateFileName,
+		m_CommentsTemplate,
+		std::bind(&ProjectFiles::GetCommentsTemplateDefaultContent, *this));
+}
 
-	if (m_CommentsTemplate.empty() && createIfMissing)
+bool ProjectFiles::CreateStyleSheetIfNecessary()
+{
+	boost::filesystem::path d(m_ProjectPath);
+	if (!boost::filesystem::exists(d / "style.css"))
 	{
-		std::stringstream ss;
-
-		ss << "--- <b>Comments template begin</b><hr>" << std::endl;
-		ss << "--- <b>Comments template end</b><br />" << std::endl;
-
-		m_CommentsTemplate = ss.str();
-
-		WriteFile("_comments_template.html", m_CommentsTemplate);
+		boost::filesystem::ofstream (d / "style.css");
 	}
-
-	if (m_CommentsTemplate.empty())
-	{
-		std::cerr << "Unable to open template file " << "_comments_template.html" << std::endl;
-		return false;
-	}
-
 	return true;
 }
 
@@ -155,6 +89,26 @@ std::string ProjectFiles::GetPageTemplate()
 std::string ProjectFiles::GetCommentsTemplate()
 {
 	return m_CommentsTemplate;
+}
+
+bool ProjectFiles::LoadTemplate(std::string path, std::string &target, std::function<std::string()> defaultContent)
+{
+	target = LoadFile(path);
+
+	if (target.empty() && m_CreateIfMissing)
+	{
+		target = defaultContent();
+
+		WriteFile(path, target);
+	}
+
+	if (target.empty())
+	{
+		std::cerr << "Unable to open template file " << path << std::endl;
+		return false;
+	}
+
+	return true;
 }
 
 std::string ProjectFiles::LoadFile(std::string fileName)
@@ -188,4 +142,60 @@ void ProjectFiles::WriteFile(std::string fileName, std::string content)
 	{
 		file << content;
 	}
+}
+
+
+std::string ProjectFiles::GetMainTemplateDefaultContent()
+{
+	std::stringstream ss;
+
+	ss << "--- <b>Main template begin</b><hr>" << std::endl;
+	ss << "Website name: <a href=\"/\"><!-- head.m_WebsiteName --></a><hr>" << std::endl;
+	ss << "Title: <!-- head.m_Title --><hr>" << std::endl;
+	ss << "Website description: <!-- head.m_WebsiteDescription --><hr>" << std::endl;
+	ss << "Page links: <!-- pagelinks --><hr>" << std::endl;
+	ss << "Tag links: <!-- taglinks --><hr>" << std::endl;
+	ss << "Page list: <!-- pagelist --><hr>" << std::endl;
+	ss << "Content: <!-- content --><hr>" << std::endl;
+	ss << "--- <b>Main template end</b><br />" << std::endl;
+
+	return ss.str();
+}
+
+std::string ProjectFiles::GetArticleTemplateDefaultContent()
+{
+	std::stringstream ss;
+
+	ss << "--- <b>Article template begin</b><hr>" << std::endl;
+	ss << "Date: <!-- m_Date.day -->&nbsp; <!-- m_Date.month -->&nbsp; <!-- m_Date.year --><hr>" << std::endl;
+	ss << "Title: <!-- m_Title --><hr>" << std::endl;
+	ss << "Content: <!-- m_Content --><hr>" << std::endl;
+	ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
+	ss << "Tags: <!-- m_Tags --><hr>" << std::endl;
+	ss << "--- <b>Article template end</b><br />" << std::endl;
+
+	return ss.str();
+}
+
+std::string ProjectFiles::GetPageTemplateDefaultContent()
+{
+	std::stringstream ss;
+
+	ss << "--- <b>Page template begin</b><hr>" << std::endl;
+	ss << "Title: <!-- m_Title --><hr>" << std::endl;
+	ss << "Content: <!-- m_Content --><hr>" << std::endl;
+	ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
+	ss << "--- <b>Page template end</b><br />" << std::endl;
+
+	return ss.str();
+}
+
+std::string ProjectFiles::GetCommentsTemplateDefaultContent()
+{
+	std::stringstream ss;
+
+	ss << "--- <b>Comments template begin</b><hr>" << std::endl;
+	ss << "--- <b>Comments template end</b><br />" << std::endl;
+
+	return ss.str();
 }
