@@ -187,14 +187,16 @@ void MainWindow::fileChangedSlot(QString path)
 
 void MainWindow::directoryChangedSlot(QString path)
 {
-	std::cout << "Directory has been changed: " << path.toStdString() << std::endl;
-
-	if (m_NewFileCheckTimer.isActive())
+	if (!(path.toStdString().find("mown-preview") >= 0 || path.toStdString().find("mown-export") >= 0))
 	{
-		m_NewFileCheckTimer.stop();
-	}
+		std::cout << "Directory has been changed: " << path.toStdString() << std::endl;
+		if (m_NewFileCheckTimer.isActive())
+		{
+			m_NewFileCheckTimer.stop();
+		}
 
-	m_NewFileCheckTimer.start(50);
+		m_NewFileCheckTimer.start(50);
+	}
 }
 
 void MainWindow::exportTimerTimeout()
@@ -212,8 +214,6 @@ void MainWindow::newFileTimerTimeout()
 		std::cout << "New file(s) detected" << std::endl;
 		DelayedExport();
 	}
-	else
-		UpdateWatcher(m_CurrentProjectFolder.c_str());
 }
 
 void MainWindow::Export(bool local)
