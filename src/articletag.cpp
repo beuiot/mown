@@ -95,7 +95,7 @@ std::string ArticleTag::GeneratePageList(int page)
 int ArticleTag::GetPageCount()
 {
 	if (m_Articles.size() == 0)
-		return 0;
+		return 1; // Always have one page so index.html is created without articles
 
 	return ((m_Articles.size() - 1) / m_ArticlesPerPage) + 1;
 }

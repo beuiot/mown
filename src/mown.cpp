@@ -96,7 +96,12 @@ bool Mown::Export(const std::string path)
 		std::stringstream rssFileContent;
 		rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
 		rssFileContent << "  <channel>" << std::endl << "    <title>" << m_Settings.m_WebsiteName << "</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
-		rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
+		if (m_Articles.size() > 0)
+		{
+			rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
+		}
+
+		CreateTag("Tous les billets");
 
 		for (auto it = m_Articles.begin();
 		it != m_Articles.end();
@@ -311,9 +316,16 @@ void Mown::Cleanup()
 
 void Mown::AddArticleToTag(std::string tagName, Article article)
 {
-	ArticleTag tag;
+	CreateTag(tagName);
+
+	m_Tags[tagName].m_Articles.push_back(article);
+}
+
+void Mown::CreateTag(std::string tagName)
+{
 	if (m_Tags.find(tagName) == m_Tags.end())
 	{
+		ArticleTag tag;
 		tag.m_Name = tagName;
 		if (tagName == "Tous les billets")
 			tag.m_IsIndex = true;
@@ -326,8 +338,6 @@ void Mown::AddArticleToTag(std::string tagName, Article article)
 
 		m_Tags[tagName] = tag;
 	}
-
-	m_Tags[tagName].m_Articles.push_back(article);
 }
 
 void Mown::EmptyFolder(std::string path)
