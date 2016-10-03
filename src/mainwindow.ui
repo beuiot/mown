@@ -60,7 +60,14 @@
        <property name="spacing">
         <number>3</number>
        </property>
-       <item row="2" column="10">
+       <item row="0" column="5">
+        <widget class="QCheckBox" name="forceAll">
+         <property name="text">
+          <string>Force all</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="11">
         <widget class="QLineEdit" name="serverPath">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -86,7 +93,7 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="7">
+       <item row="0" column="8">
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -99,36 +106,10 @@
          </property>
         </spacer>
        </item>
-       <item row="0" column="5">
-        <widget class="QCheckBox" name="forceAll">
-         <property name="text">
-          <string>Force all</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="9">
-        <widget class="QLabel" name="label">
-         <property name="maximumSize">
-          <size>
-           <width>80</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Server path</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="10">
-        <widget class="QCheckBox" name="enableComments">
+        <widget class="QPushButton" name="exportButton">
          <property name="text">
-          <string>Enable comments</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
+          <string>Export</string>
          </property>
         </widget>
        </item>
@@ -145,17 +126,43 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="exportButton">
-         <property name="text">
-          <string>Export</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="5">
         <widget class="QPushButton" name="indexButton">
          <property name="text">
           <string>Go to index</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="10">
+        <widget class="QLabel" name="label">
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Server path</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="11">
+        <widget class="QCheckBox" name="enableComments">
+         <property name="text">
+          <string>Enable comments</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QPushButton" name="openSourceFolderButton">
+         <property name="text">
+          <string>Go to folder</string>
          </property>
         </widget>
        </item>
@@ -166,10 +173,32 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="openSourceFolderButton">
+       <item row="0" column="7">
+        <widget class="QLineEdit" name="articleNameInput">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>130</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Use p_ prefix to create standalone page</string>
+         </property>
+         <property name="placeholderText">
+          <string>Article file name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="7">
+        <widget class="QPushButton" name="createArticleButton">
          <property name="text">
-          <string>Go to folder</string>
+          <string>Create article</string>
          </property>
         </widget>
        </item>

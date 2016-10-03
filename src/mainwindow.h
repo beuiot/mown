@@ -38,6 +38,7 @@ private:
 
 	QFileSystemWatcher m_Watcher;
 	QTimer m_ExportTimer;
+	QTimer m_NewFileCheckTimer;
 
 	QDebugStream * m_QOut;
 	QDebugStream * m_QOutError;
@@ -49,9 +50,11 @@ private:
 	void on_loadButton_clicked();
 	void on_openSourceFileButton_clicked();
 	void on_openSourceFolderButton_clicked();
+	void on_createArticleButton_clicked();
 	void fileChangedSlot(QString path);
 	void directoryChangedSlot(QString path);
 	void exportTimerTimeout();
+	void newFileTimerTimeout();
 	void on_refreshButton_clicked();
 	void on_forceAll_toggled(bool checked);
 	void on_localPreview_toggled(bool checked);

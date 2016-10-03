@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(&m_Watcher, SIGNAL(directoryChanged(QString)), this, SLOT(directoryChangedSlot(QString)));
 
 	connect(&m_ExportTimer, SIGNAL(timeout()), this, SLOT(exportTimerTimeout()));
+	connect(&m_NewFileCheckTimer, SIGNAL(timeout()), this, SLOT(newFileTimerTimeout()));
 
 	connect(ui->statusBar, SIGNAL(mouseClick()), this, SLOT(on_showConsoleButton_clicked()));
 
@@ -151,12 +152,21 @@ void MainWindow::on_openSourceFolderButton_clicked()
 	QDesktopServices::openUrl(QUrl::fromUserInput(QString::fromStdString(m_CurrentProjectFolder)));
 }
 
+void MainWindow::on_createArticleButton_clicked()
+{
+	std::string articleName = ui->articleNameInput->text().toStdString();
+	std::cout << "Creating article " << articleName << std::endl;
+
+	std::ofstream f(m_CurrentProjectFolder + "/" + articleName + ".yaml");
+
+	DelayedExport();
+}
+
 void MainWindow::UpdateWatcher(const QString & fileName)
 {
 	m_Watcher.removePaths(m_Watcher.directories());
 	m_Watcher.removePaths(m_Watcher.files());
 
-	m_Watcher.addPath(fileName);
 	QDir dir(fileName);
 	QFileInfoList list = dir.entryInfoList();
 	std::cout << "Watching ";
@@ -165,6 +175,7 @@ void MainWindow::UpdateWatcher(const QString & fileName)
 		std::cout << list[i].fileName().toStdString() << " ";
 		m_Watcher.addPath(list[i].absoluteFilePath());
 	}
+	m_Watcher.addPath(dir.absolutePath());
 	std::cout << std::endl;
 }
 
@@ -176,11 +187,14 @@ void MainWindow::fileChangedSlot(QString path)
 
 void MainWindow::directoryChangedSlot(QString path)
 {
-	if (path.indexOf("mown-preview") >= 0 && path.indexOf("mown-export") >= 0)
+	std::cout << "Directory has been changed: " << path.toStdString() << std::endl;
+
+	if (m_NewFileCheckTimer.isActive())
 	{
-		std::cout << "Directory changed: " << path.toStdString() << std::endl;
-		DelayedExport();
+		m_NewFileCheckTimer.stop();
 	}
+
+	m_NewFileCheckTimer.start(50);
 }
 
 void MainWindow::exportTimerTimeout()
@@ -188,6 +202,18 @@ void MainWindow::exportTimerTimeout()
 	m_ExportTimer.stop();
 	std::cout << "Delayed export start" << std::endl;
 	Export(true);
+}
+
+void MainWindow::newFileTimerTimeout()
+{
+	m_NewFileCheckTimer.stop();
+	if (m_Mown.PathHasNewContent(m_CurrentProjectFolder))
+	{
+		std::cout << "New file(s) detected" << std::endl;
+		DelayedExport();
+	}
+	else
+		UpdateWatcher(m_CurrentProjectFolder.c_str());
 }
 
 void MainWindow::Export(bool local)
