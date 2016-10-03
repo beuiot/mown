@@ -36,6 +36,9 @@ public:
 
 private:
 	std::string m_SourceFilePath;
+
+	bool LoadFile(std::string& rawYaml, std::string& rawContent);
+	bool SaveFile();
 };
 
 #endif // ARTICLE_H

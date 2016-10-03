@@ -6,10 +6,17 @@
 #include "yaml-cpp/yaml.h"
 #include "boost/date_time.hpp"
 #include <locale>
+#include <boost/filesystem.hpp>
 
 #include "contentfactory.h"
 
-Article::Article() : m_Ignore(false), m_Title("title"), m_Tags(NULL), m_Content(""), m_IsPage(false)
+Article::Article() :
+	m_Ignore(false),
+	m_Hidden(false),
+	m_LocalPreview(true), m_IsPage(false),
+	m_Title(""),
+	m_Date(boost::posix_time::second_clock::local_time().date()), m_Tags(NULL),
+	m_Content("")
 {
 
 }
@@ -22,73 +29,46 @@ Article::~Article()
 bool Article::LoadFromFile(std::string path)
 {
 	m_SourceFilePath = path;
-	std::ifstream file(path);
+	std::string rawYaml;
 
-	if (!file.is_open())
+	if (LoadFile(rawYaml, m_Content))
 	{
-		std::cerr << "Could not open " << path << std::endl;
-	}
-	else
-	{
-		if (path.find("p_") != std::string::npos)
+		if (rawYaml.empty())
 		{
-			std::cout << path << " is page." << std::endl;
-			m_IsPage = true;
+			m_Tags.push_back("Tag1");
+			boost::filesystem::path p(m_SourceFilePath);
+			m_Title = p.stem().string();
+			SaveFile();
 		}
-
-		std::stringstream rawYaml;
-		std::stringstream rawContent;
-		int yamlSeparatorsEncountered = 0;
-
-		std::string line;
-		while (getline(file, line))
+		else
 		{
-			if (line.find("---") < line.size())
+			YAML::Node config = YAML::Load(rawYaml);
+
+			if (config["m_Ignore"] != NULL)
+				m_Ignore = config["m_Ignore"].as<bool>();
+
+			if (config["m_Hidden"] != NULL)
+				m_Hidden = config["m_Hidden"].as<bool>();
+
+			if (config["m_Title"] != NULL)
+				m_Title = config["m_Title"].as<std::string>();
+
+			if (config["m_Date"] != NULL)
 			{
-				yamlSeparatorsEncountered++;
-				continue;
+				std::string dateString = config["m_Date"].as<std::string>();
+				m_Date = boost::gregorian::from_string(dateString);
 			}
-			else if (line.find("***Draft***") < line.size())
-				break;
 
-			if (yamlSeparatorsEncountered < 2)
-				rawYaml << line << std::endl;
-			else
-				rawContent << line << std::endl;
-		}
+			YAML::Node tags = config["m_Tags"];
+			if (tags != NULL)
+			{
 
-		YAML::Node config = YAML::Load(rawYaml.str());
-
-		if (config["m_Ignore"] != NULL)
-			m_Ignore = config["m_Ignore"].as<bool>();
-		else
-			m_Ignore = false;
-
-		if (config["m_Hidden"] != NULL)
-			m_Hidden = config["m_Hidden"].as<bool>();
-		else
-			m_Hidden = false;
-
-		if (config["m_Title"] != NULL)
-			m_Title = config["m_Title"].as<std::string>();
-
-		if (config["m_Date"] != NULL)
-		{
-			std::string dateString = config["m_Date"].as<std::string>();
-			m_Date = boost::gregorian::from_string(dateString);
-		}
-
-		YAML::Node tags = config["m_Tags"];
-		if (tags != NULL)
-		{
-
-			for (unsigned i = 0; i < tags.size(); i++) {
-				std::string tag = tags[i].as<std::string>();
-				m_Tags.push_back(tag);
+				for (unsigned i = 0; i < tags.size(); i++) {
+					std::string tag = tags[i].as<std::string>();
+					m_Tags.push_back(tag);
+				}
 			}
 		}
-
-		m_Content = rawContent.str();
 	}
 
 	return true;
@@ -308,4 +288,92 @@ std::string Article::FormatExcerpt()
 bool Article::SortByDate(const Article &lhs, const Article &rhs)
 {
 	return lhs.m_Date > rhs.m_Date;
+}
+
+bool Article::LoadFile(std::string& rawYaml, std::string& rawContent)
+{
+	rawYaml = "";
+	rawContent = "";
+	std::ifstream file(m_SourceFilePath);
+
+	if (!file.is_open())
+	{
+		std::cerr << "Could not open " << m_SourceFilePath << std::endl;
+		return false;
+	}
+	else
+	{
+		if (m_SourceFilePath.find("p_") != std::string::npos)
+		{
+			std::cout << m_SourceFilePath << " is page." << std::endl;
+			m_IsPage = true;
+		}
+
+		std::stringstream rawYamlStream;
+		std::stringstream rawContentStream;
+		int yamlSeparatorsEncountered = 0;
+
+		std::string line;
+		while (getline(file, line))
+		{
+			if (line.find("---") < line.size())
+			{
+				yamlSeparatorsEncountered++;
+				continue;
+			}
+			else if (line.find("***Draft***") < line.size())
+				break;
+
+			if (yamlSeparatorsEncountered == 1)
+				rawYamlStream << line << std::endl;
+			else
+				rawContentStream << line << std::endl;
+		}
+
+		rawYaml = rawYamlStream.str();
+		rawContent = rawContentStream.str();
+		return true;
+	}
+	return false;
+}
+
+bool Article::SaveFile()
+{
+	std::ofstream file(m_SourceFilePath, std::ios_base::trunc);
+
+	if (!file.is_open())
+	{
+		std::cerr << "Could not open " << m_SourceFilePath << " for writing" << std::endl;
+		return false;
+	}
+	else
+	{
+		YAML::Node config;
+
+		config["m_Ignore"] = m_Ignore;
+		config["m_Hidden"] = m_Hidden;
+		config["m_Title"] = m_Title;
+
+		if (!m_IsPage)
+		{
+			config["m_Tags"] = m_Tags;
+
+			using namespace boost::gregorian;
+			std::stringstream dateStream;
+
+			date_facet* facet = new date_facet();
+			dateStream.imbue (std::locale (std::locale::classic(), facet));
+			facet->format("%Y-%m-%d");
+			dateStream << m_Date;
+
+			config["m_Date"] = dateStream.str();
+		}
+
+		file << "---" << std::endl;
+		file << config << std::endl;
+		file << "---" << std::endl;
+		file << m_Content;
+	}
+
+	return true;
 }
