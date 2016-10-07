@@ -130,6 +130,8 @@ void ContentFactory::ReplaceInString(std::string &source, std::string search, co
 void ContentFactory::SanitizeString(std::string &source)
 {
 	// Ouch. This hurts.
+	ReplaceInString(source, ".", "-");
+	ReplaceInString(source, "_", "-");
 	ReplaceInString(source, " ", "-");
 	ReplaceInString(source, "'", "-");
 	ReplaceInString(source, "\\", "-");
