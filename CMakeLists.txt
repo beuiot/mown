@@ -8,8 +8,8 @@ project(Mown)
 
 ### Generate version name (format: v0.1-beta.2)
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_SUFFIX_NAME "") #alpha, beta, patch. Empty for releases.
+set(VERSION_MINOR 2)
+set(VERSION_SUFFIX_NAME "beta") #alpha, beta, patch. Empty for releases.
 set(VERSION_SUFFIX_NUMBER 1) #only if this is not a release
 
 if(VERSION_SUFFIX_NAME STREQUAL "")
