@@ -316,7 +316,7 @@ bool Article::LoadFile(std::string& rawYaml, std::string& rawContent)
 		std::string line;
 		while (getline(file, line))
 		{
-			if (line.find("---") < line.size())
+			if (line.find("---") == 0)
 			{
 				yamlSeparatorsEncountered++;
 				continue;
