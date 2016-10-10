@@ -97,7 +97,8 @@ int ArticleTag::GetPageCount()
 	if (m_Articles.size() == 0)
 		return 1; // Always have one page so index.html is created without articles
 
-	return ((m_Articles.size() - 1) / m_ArticlesPerPage) + 1;
+	size_t count = ((m_Articles.size() - 1) / m_ArticlesPerPage) + 1;
+	return (int)count;
 }
 
 std::vector<Article> ArticleTag::GetPageArticles(int page)
