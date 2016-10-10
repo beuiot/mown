@@ -11,12 +11,9 @@
 #include "contentfactory.h"
 
 Article::Article() :
-	m_Ignore(false),
-	m_Hidden(false),
-	m_LocalPreview(true), m_IsPage(false),
-	m_Title(""),
-	m_Date(boost::posix_time::second_clock::local_time().date()), m_Tags(NULL),
-	m_Content("")
+	m_LocalPreview(true),
+	m_IsPage(false),
+	m_CurrentLanguage("")
 {
 
 }
@@ -26,50 +23,49 @@ Article::~Article()
 
 }
 
-bool Article::LoadFromFile(std::string path)
+bool Article::LoadFromFile(std::string path, std::vector<std::string>& languages)
 {
 	m_SourceFilePath = path;
-	std::string rawYaml;
+	bool hasToSave = false;
 
-	if (LoadFile(rawYaml, m_Content))
+	if (LoadFile())
 	{
-		if (rawYaml.empty())
+		for (auto it = m_Data.begin();
+		it != m_Data.end();
+			++it)
 		{
-			m_Tags.push_back("Tag1");
-			boost::filesystem::path p(m_SourceFilePath);
-			m_Title = p.stem().string();
-			SaveFile();
-		}
-		else
-		{
-			YAML::Node config = YAML::Load(rawYaml);
+			if (!it->ParseYaml())
+				hasToSave = true;
 
-			if (config["m_Ignore"] != NULL)
-				m_Ignore = config["m_Ignore"].as<bool>();
-
-			if (config["m_Hidden"] != NULL)
-				m_Hidden = config["m_Hidden"].as<bool>();
-
-			if (config["m_Title"] != NULL)
-				m_Title = config["m_Title"].as<std::string>();
-
-			if (config["m_Date"] != NULL)
+			bool languageFound = false;
+			for (auto lgIt = languages.begin(); lgIt != languages.end(); ++lgIt)
 			{
-				std::string dateString = config["m_Date"].as<std::string>();
-				m_Date = boost::gregorian::from_string(dateString);
-			}
-
-			YAML::Node tags = config["m_Tags"];
-			if (tags != NULL)
-			{
-
-				for (unsigned i = 0; i < tags.size(); i++) {
-					std::string tag = tags[i].as<std::string>();
-					m_Tags.push_back(tag);
+				if (*lgIt == it->m_Language)
+				{
+					languageFound = true;
+					break;
 				}
 			}
+
+			if (!languageFound)
+				languages.push_back(it->m_Language);
 		}
 	}
+
+	if (m_Data.size() == 0)
+	{
+		ArticleData data;
+		m_Data.push_back(data);
+
+		hasToSave = true;
+	}
+
+	if (hasToSave)
+	{
+		SaveFile();
+	}
+
+	m_CurrentData = FindData("");
 
 	return true;
 }
@@ -84,16 +80,17 @@ std::string Article::Dump(bool showContent)
 {
 	std::stringstream result;
 
-	result << m_Title << std::endl << m_Date << std::endl;
+	result << m_CurrentData.m_Title << "(" << m_CurrentData.m_Language << ")" << std::endl;
+	result << m_CurrentData.m_Date << std::endl;
 
-	for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
+	for (auto it = m_CurrentData.m_Tags.begin(); it != m_CurrentData.m_Tags.end(); ++it)
 	{
 		result << *it << " ";
 	}
 	result << std::endl;
 
 	if (showContent)
-		result << m_Content << std::endl;
+		result << m_CurrentData.m_Content << std::endl;
 
 	return result.str();
 }
@@ -104,7 +101,7 @@ std::string Article::GetFileName()
 
 	std::stringstream fileName;
 
-	std::string title = m_Title;
+	std::string title = m_CurrentData.m_Title;
 	ContentFactory::SanitizeString(title);
 
 	if (!m_IsPage)
@@ -113,7 +110,7 @@ std::string Article::GetFileName()
 		fileName.imbue(std::locale(std::locale::classic(), facet));
 
 		facet->format("%Y-%m-%d");
-		fileName << m_Date;
+		fileName << m_CurrentData.m_Date;
 
 		fileName << "-";
 	}
@@ -139,14 +136,14 @@ std::string Article::GetStandardDate()
 	fileName.imbue(std::locale(std::locale::classic(), facet));
 	// Sun, 19 May 2002 15:21:36 GMT
 	facet->format("%a, %b %d %Y 11:00:00 GMT");
-	fileName << m_Date;
+	fileName << m_CurrentData.m_Date;
 
 	return fileName.str();
 }
 
 std::string Article::FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments)
 {
-	std::istringstream iss(m_Content);
+	std::istringstream iss(m_CurrentData.m_Content);
 	std::stringstream sstr;
 
 	bool bulletListStarted = false;
@@ -200,13 +197,13 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 
 	if (isInList)
 	{
-		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">" + m_Title + "</a>");
+		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">" + m_CurrentData.m_Title + "</a>");
 
 		if (enableComments && !hasExcerpt)
 			commentsLink = "<a href=\"" + GetFileName() + (m_LocalPreview ? ".html" : "") + "#comments\">Commentaires</a>";
 	}
 
-	ContentFactory::ReplaceInString(result, "<!-- m_Title -->", m_Title);
+	ContentFactory::ReplaceInString(result, "<!-- m_Title -->", m_CurrentData.m_Title);
 
 	ContentFactory::ReplaceInString(result, "<!-- m_CommentsLink -->", commentsLink);
 
@@ -218,14 +215,14 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 	{
 		ss.width(2);
 		ss.fill('0');
-		ss << m_Date.day();
+		ss << m_CurrentData.m_Date.day();
 		ContentFactory::ReplaceInString(result, "<!-- m_Date.day -->", ss.str());
 
 		ss.str("");
 		ss.clear();
 		ss.width(4);
 		ss.fill('0');
-		ss << m_Date.year();
+		ss << m_CurrentData.m_Date.year();
 		ContentFactory::ReplaceInString(result, "<!-- m_Date.year -->", ss.str());
 
 		using namespace boost::gregorian;
@@ -237,7 +234,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 		date_facet* german_facet = new date_facet();
 		ss.imbue(std::locale(std::locale::classic(), german_facet));
 
-		greg_month m = m_Date.month();
+		greg_month m = m_CurrentData.m_Date.month();
 
 		german_facet->long_month_names(std::vector<std::string>(months, months + 12));
 
@@ -250,9 +247,9 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 		ss.str("");
 		ss.clear();
 
-		for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
+		for (auto it = m_CurrentData.m_Tags.begin(); it != m_CurrentData.m_Tags.end(); ++it)
 		{
-			if (it != m_Tags.begin())
+			if (it != m_CurrentData.m_Tags.begin())
 				ss << ", ";
 			ss << *it;
 		}
@@ -263,7 +260,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 }
 std::string Article::FormatExcerpt()
 {
-	std::istringstream iss(m_Content);
+	std::istringstream iss(m_CurrentData.m_Content);
 	std::stringstream sstr;
 
 	std::string line;
@@ -285,15 +282,33 @@ std::string Article::FormatExcerpt()
 	return result;
 }
 
-bool Article::SortByDate(const Article &lhs, const Article &rhs)
+bool Article::GetIgnore()
 {
-	return lhs.m_Date > rhs.m_Date;
+	return m_CurrentData.m_Ignore;
 }
 
-bool Article::LoadFile(std::string& rawYaml, std::string& rawContent)
+bool Article::GetHidden()
 {
-	rawYaml = "";
-	rawContent = "";
+	return m_CurrentData.m_Hidden;
+}
+
+std::string Article::GetTitle()
+{
+	return m_CurrentData.m_Title;
+}
+
+const std::vector<std::string>& Article::GetTags()
+{
+	return m_CurrentData.m_Tags;
+}
+
+bool Article::SortByDate(const Article &lhs, const Article &rhs)
+{
+	return lhs.m_CurrentData.m_Date > rhs.m_CurrentData.m_Date;
+}
+
+bool Article::LoadFile()
+{
 	std::ifstream file(m_SourceFilePath);
 
 	if (!file.is_open())
@@ -311,7 +326,9 @@ bool Article::LoadFile(std::string& rawYaml, std::string& rawContent)
 
 		std::stringstream rawYamlStream;
 		std::stringstream rawContentStream;
+
 		int yamlSeparatorsEncountered = 0;
+		bool draftSeparatorEncountered = false;
 
 		std::string line;
 		while (getline(file, line))
@@ -319,22 +336,54 @@ bool Article::LoadFile(std::string& rawYaml, std::string& rawContent)
 			if (line.find("---") == 0)
 			{
 				yamlSeparatorsEncountered++;
+				if (yamlSeparatorsEncountered > 1 && yamlSeparatorsEncountered % 2 == 1)
+				{
+					AddArticleData(rawYamlStream.str(), rawContentStream.str());
+
+					rawYamlStream.str(std::string());
+					rawYamlStream.clear();
+					rawContentStream.str(std::string());
+					rawContentStream.clear();
+
+					draftSeparatorEncountered = false;
+				}
 				continue;
 			}
 			else if (line.find("***Draft***") < line.size())
-				break;
+			{
+				draftSeparatorEncountered = true;
+				continue;
+			}
 
-			if (yamlSeparatorsEncountered == 1)
+			if (yamlSeparatorsEncountered % 2 == 1)
 				rawYamlStream << line << std::endl;
-			else
+			else if (!draftSeparatorEncountered)
 				rawContentStream << line << std::endl;
 		}
 
-		rawYaml = rawYamlStream.str();
-		rawContent = rawContentStream.str();
+		AddArticleData(rawYamlStream.str(), rawContentStream.str());
 		return true;
 	}
 	return false;
+}
+
+void Article::AddArticleData(std::string rawYaml, std::string rawContent)
+{
+	if (!rawYaml.empty() || !rawContent.empty())
+	{
+		ArticleData articleData;
+		articleData.m_RawYaml = rawYaml;
+		articleData.m_Content = rawContent;
+
+		if (rawYaml.empty())
+		{
+			articleData.m_Tags.push_back("Tag1");
+			boost::filesystem::path p(m_SourceFilePath);
+			articleData.m_Title = p.stem().string();
+		}
+
+		m_Data.push_back(articleData);
+	}
 }
 
 bool Article::SaveFile()
@@ -348,31 +397,108 @@ bool Article::SaveFile()
 	}
 	else
 	{
-		YAML::Node config;
-
-		config["m_Ignore"] = m_Ignore;
-		config["m_Hidden"] = m_Hidden;
-		config["m_Title"] = m_Title;
-
-		if (!m_IsPage)
+		for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
 		{
-			config["m_Tags"] = m_Tags;
+			YAML::Node config;
 
-			using namespace boost::gregorian;
-			std::stringstream dateStream;
+			config["m_Ignore"] = it->m_Ignore;
+			config["m_Hidden"] = it->m_Hidden;
+			config["m_Title"] = it->m_Title;
+			config["m_Language"] = it->m_Language;
 
-			date_facet* facet = new date_facet();
-			dateStream.imbue (std::locale (std::locale::classic(), facet));
-			facet->format("%Y-%m-%d");
-			dateStream << m_Date;
+			if (!m_IsPage)
+			{
+				config["m_Tags"] = it->m_Tags;
 
-			config["m_Date"] = dateStream.str();
+				using namespace boost::gregorian;
+				std::stringstream dateStream;
+
+				date_facet* facet = new date_facet();
+				dateStream.imbue (std::locale (std::locale::classic(), facet));
+				facet->format("%Y-%m-%d");
+				dateStream << it->m_Date;
+
+				config["m_Date"] = dateStream.str();
+			}
+
+			file << "---" << std::endl;
+			file << config << std::endl;
+			file << "---" << std::endl;
+			file << it->m_Content;
 		}
+	}
+	return true;
+}
 
-		file << "---" << std::endl;
-		file << config << std::endl;
-		file << "---" << std::endl;
-		file << m_Content;
+Article::ArticleData Article::FindData(std::string language)
+{
+	ArticleData result;
+
+	if (m_Data.size() > 0)
+		result = m_Data[0];
+
+	for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
+	{
+		if (it->m_Language == language)
+		{
+			result = *it;
+			break;
+		}
+	}
+
+	return result;
+}
+
+Article::ArticleData::ArticleData() :
+	m_Ignore(false),
+	m_Hidden(false),
+	m_Title(""),
+	m_Language("en"),
+	m_Date(boost::posix_time::second_clock::local_time().date()),
+	m_Tags(NULL),
+	m_Content("")
+{
+
+}
+
+Article::ArticleData::~ArticleData()
+{
+
+}
+
+bool Article::ArticleData::ParseYaml()
+{
+	YAML::Node config = YAML::Load(m_RawYaml);
+
+	if (config.size() <= 0)
+		return false;
+
+	if (config["m_Ignore"] != NULL)
+		m_Ignore = config["m_Ignore"].as<bool>();
+
+	if (config["m_Hidden"] != NULL)
+		m_Hidden = config["m_Hidden"].as<bool>();
+
+	if (config["m_Title"] != NULL)
+		m_Title = config["m_Title"].as<std::string>();
+
+	if (config["m_Language"] != NULL)
+		m_Language = config["m_Language"].as<std::string>();
+
+	if (config["m_Date"] != NULL)
+	{
+		std::string dateString = config["m_Date"].as<std::string>();
+		m_Date = boost::gregorian::from_string(dateString);
+	}
+
+	YAML::Node tags = config["m_Tags"];
+	if (tags != NULL)
+	{
+
+		for (unsigned i = 0; i < tags.size(); i++) {
+			std::string tag = tags[i].as<std::string>();
+			m_Tags.push_back(tag);
+		}
 	}
 
 	return true;

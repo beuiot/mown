@@ -48,13 +48,13 @@ bool Mown::Export(const std::string path)
 				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
 				{
 					Article article;
-					article.LoadFromFile(filePath.string());
+					article.LoadFromFile(filePath.string(), m_Languages);
 
 					article.m_LocalPreview = m_LocalPreview;
 
 					if (article.m_IsPage)
 					{
-						if (m_ForceAll || !article.m_Ignore)
+						if (m_ForceAll || !article.GetIgnore())
 							m_Pages.push_back(article);
 					}
 					else
@@ -107,19 +107,19 @@ bool Mown::Export(const std::string path)
 		it != m_Articles.end();
 			++it)
 		{
-			if (m_ForceAll || it->m_Ignore == false)
+			if (m_ForceAll || it->GetIgnore() == false)
 			{
-				if (!it->m_Hidden)
+				if (!it->GetHidden())
 				{
 					AddArticleToTag("Tous les billets", *it);
 
-					for (auto itTag = it->m_Tags.begin();
-					itTag != it->m_Tags.end();
+					for (auto itTag = it->GetTags().begin();
+					itTag != it->GetTags().end();
 						++itTag)
 						AddArticleToTag(*itTag, *it);
 
 					rssFileContent << "    <item>" << std::endl;
-					rssFileContent << "       <title>" << it->m_Title << "</title>" << std::endl;
+					rssFileContent << "       <title>" << it->GetTitle() << "</title>" << std::endl;
 					rssFileContent << "       <link>" << m_Settings.m_Url << it->GetLink() << "</link>" << std::endl;
 					rssFileContent << "       <description>" << it->FormatExcerpt() << "</description>" << std::endl;
 					rssFileContent << "       <pubDate>" << it->GetStandardDate() << "</pubDate>" << std::endl;
@@ -131,11 +131,11 @@ bool Mown::Export(const std::string path)
 				std::string fileContent = m_ProjectFiles.GetMainTemplate();
 				std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetArticleTemplate(), false, m_EnableComments);
 
-				if (m_EnableComments && it->m_Ignore == false)
+				if (m_EnableComments && it->GetIgnore() == false)
 					formatedArticle += m_ProjectFiles.GetCommentsTemplate();
 
 				ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
-				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
+				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
@@ -200,15 +200,15 @@ bool Mown::Export(const std::string path)
 			std::string fileContent = m_ProjectFiles.GetMainTemplate();
 			std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetPageTemplate(), false, m_EnableComments);
 
-			if (m_EnableComments && it->m_Ignore == false)
+			if (m_EnableComments && it->GetIgnore() == false)
 				formatedArticle += m_ProjectFiles.GetCommentsTemplate();
 
 			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
+			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
-			ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->m_Title));
+			ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->GetTitle()));
 
 			std::ofstream fout(file.string());
 			if (fout.is_open())
@@ -342,10 +342,10 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 	ss << "<span class=\"wrapper\">";
 	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
 	{
-		if (it->m_Title == currentPage)
-			ss << "<span class=\"current_page\">" << it->m_Title << "</span> ";
+		if (it->GetTitle() == currentPage)
+			ss << "<span class=\"current_page\">" << it->GetTitle() << "</span> ";
 		else
-			ss << "<a href=\"" << it->GetLink() << "\">" << it->m_Title << "</a> ";
+			ss << "<a href=\"" << it->GetLink() << "\">" << it->GetTitle() << "</a> ";
 	}
 	ss << "</span>";
 
@@ -357,6 +357,7 @@ void Mown::Cleanup()
 	m_Pages.clear();
 	m_Articles.clear();
 	m_Tags.clear();
+	m_Languages.clear();
 	m_SortedTags.clear();
 	m_Settings.SetDefaultValues();
 }

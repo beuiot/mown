@@ -50,6 +50,7 @@ private:
 	ProjectSettings m_Settings;
 	std::vector<Article> m_Articles;
 	std::vector<Article> m_Pages;
+	std::vector<std::string> m_Languages;
 	std::map<std::string, ArticleTag> m_Tags;
 	std::vector<ArticleTag> m_SortedTags;
 
