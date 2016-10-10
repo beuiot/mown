@@ -13,7 +13,8 @@
 Article::Article() :
 	m_LocalPreview(true),
 	m_IsPage(false),
-	m_CurrentLanguage("")
+	m_CurrentLanguage(""),
+	m_HasCurrentLanguage(false)
 {
 
 }
@@ -34,7 +35,7 @@ bool Article::LoadFromFile(std::string path, std::vector<std::string>& languages
 		it != m_Data.end();
 			++it)
 		{
-			if (!it->ParseYaml())
+			if (!it->ParseYaml(m_Data[0]))
 				hasToSave = true;
 
 			bool languageFound = false;
@@ -65,7 +66,7 @@ bool Article::LoadFromFile(std::string path, std::vector<std::string>& languages
 		SaveFile();
 	}
 
-	m_CurrentData = FindData("");
+	FindData("");
 
 	return true;
 }
@@ -193,14 +194,14 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 	std::string commentsLink = "";
 
 	if (hasExcerpt)
-		commentsLink = "<a href=\"" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">Lire la suite...</a>";
+		commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">Lire la suite...</a>";
 
 	if (isInList)
 	{
-		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">" + m_CurrentData.m_Title + "</a>");
+		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">" + m_CurrentData.m_Title + "</a>");
 
 		if (enableComments && !hasExcerpt)
-			commentsLink = "<a href=\"" + GetFileName() + (m_LocalPreview ? ".html" : "") + "#comments\">Commentaires</a>";
+			commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "#comments\">Commentaires</a>";
 	}
 
 	ContentFactory::ReplaceInString(result, "<!-- m_Title -->", m_CurrentData.m_Title);
@@ -280,6 +281,17 @@ std::string Article::FormatExcerpt()
 	std::string result = sstr.str();
 	ContentFactory::ReplaceInString(result, "\n", " ");
 	return result;
+}
+
+bool Article::SetLanguage(std::string language)
+{
+	m_HasCurrentLanguage = FindData(language);
+	return HasCurrentLanguage();
+}
+
+bool Article::HasCurrentLanguage()
+{
+	return m_HasCurrentLanguage;
 }
 
 bool Article::GetIgnore()
@@ -372,6 +384,7 @@ void Article::AddArticleData(std::string rawYaml, std::string rawContent)
 	if (!rawYaml.empty() || !rawContent.empty())
 	{
 		ArticleData articleData;
+
 		articleData.m_RawYaml = rawYaml;
 		articleData.m_Content = rawContent;
 
@@ -430,9 +443,10 @@ bool Article::SaveFile()
 	return true;
 }
 
-Article::ArticleData Article::FindData(std::string language)
+bool Article::FindData(std::string language)
 {
 	ArticleData result;
+	bool found = false;
 
 	if (m_Data.size() > 0)
 		result = m_Data[0];
@@ -442,11 +456,13 @@ Article::ArticleData Article::FindData(std::string language)
 		if (it->m_Language == language)
 		{
 			result = *it;
+			found = true;
 			break;
 		}
 	}
 
-	return result;
+	m_CurrentData = result;
+	return found;
 }
 
 Article::ArticleData::ArticleData() :
@@ -466,7 +482,7 @@ Article::ArticleData::~ArticleData()
 
 }
 
-bool Article::ArticleData::ParseYaml()
+bool Article::ArticleData::ParseYaml(const ArticleData& defaultValues)
 {
 	YAML::Node config = YAML::Load(m_RawYaml);
 
@@ -475,21 +491,31 @@ bool Article::ArticleData::ParseYaml()
 
 	if (config["m_Ignore"] != NULL)
 		m_Ignore = config["m_Ignore"].as<bool>();
+	else
+		m_Ignore = defaultValues.m_Ignore;
 
 	if (config["m_Hidden"] != NULL)
 		m_Hidden = config["m_Hidden"].as<bool>();
+	else
+		m_Hidden = defaultValues.m_Hidden;
 
 	if (config["m_Title"] != NULL)
 		m_Title = config["m_Title"].as<std::string>();
+	else
+		m_Title = defaultValues.m_Title;
 
 	if (config["m_Language"] != NULL)
 		m_Language = config["m_Language"].as<std::string>();
+	else
+		m_Language = defaultValues.m_Language;
 
 	if (config["m_Date"] != NULL)
 	{
 		std::string dateString = config["m_Date"].as<std::string>();
 		m_Date = boost::gregorian::from_string(dateString);
 	}
+	else
+		m_Date = defaultValues.m_Date;
 
 	YAML::Node tags = config["m_Tags"];
 	if (tags != NULL)
@@ -500,6 +526,8 @@ bool Article::ArticleData::ParseYaml()
 			m_Tags.push_back(tag);
 		}
 	}
+	else
+		m_Tags = defaultValues.m_Tags;
 
 	return true;
 }

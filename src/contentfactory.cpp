@@ -44,7 +44,7 @@ std::string ContentFactory::ReplaceImageTags(const std::string& input)
 				else
 					alt = "";
 
-				imageTag.insert(imageTag.size(), "<p class=\"image\"><img src=\"images/");
+				imageTag.insert(imageTag.size(), "<p class=\"image\"><img src=\"@ROOT@images/");
 				imageTag.insert(imageTag.end(), fileName.begin(), fileName.end());
 				imageTag.insert(imageTag.size(), "\" alt=\"");
 				imageTag.insert(imageTag.end(), alt.begin(), alt.end());

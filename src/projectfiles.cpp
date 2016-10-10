@@ -23,18 +23,12 @@ void ProjectFiles::Configure(std::string projectPath, bool createIfMissing)
 	m_CreateIfMissing = createIfMissing;
 }
 
-bool ProjectFiles::LoadMainTemplate(std::string websiteRoot)
+bool ProjectFiles::LoadMainTemplate()
 {
-	bool result = LoadTemplate(
+	return LoadTemplate(
 		kPFMainTemplateFileName,
 		m_MainTemplate,
 		std::bind(&ProjectFiles::GetMainTemplateDefaultContent, *this));
-
-	if (result)
-	{
-		ContentFactory::ReplaceInString(m_MainTemplate, "\"/\"", "\"" + websiteRoot + "\"");
-	}
-	return result;
 }
 
 bool ProjectFiles::LoadArticleTemplate()
@@ -150,7 +144,7 @@ std::string ProjectFiles::GetMainTemplateDefaultContent()
 	std::stringstream ss;
 
 	ss << "--- <b>Main template begin</b><hr>" << std::endl;
-	ss << "Website name: <a href=\"/\"><!-- head.m_WebsiteName --></a><hr>" << std::endl;
+	ss << "Website name: <a href=\"@INDEX@\"><!-- head.m_WebsiteName --></a><hr>" << std::endl;
 	ss << "Title: <!-- head.m_Title --><hr>" << std::endl;
 	ss << "Website description: <!-- head.m_WebsiteDescription --><hr>" << std::endl;
 	ss << "Page links: <!-- pagelinks --><hr>" << std::endl;

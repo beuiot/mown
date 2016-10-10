@@ -55,8 +55,6 @@ std::string ArticleTag::GetLinkForPage(int page)
 		{
 			if (m_LocalPreview)
 				ss << "index.html";
-			else
-				ss << m_WebsiteRoot;
 		}
 		else
 			ss << (page + 1) << (m_LocalPreview ? ".html" : "");
@@ -84,7 +82,7 @@ std::string ArticleTag::GeneratePageList(int page)
 		if (i == page)
 			ss << "<span class=\"current_page\">" << (i + 1) << "</span>";
 		else
-			ss << "<a href=\"" << GetLinkForPage(i) << "\">" << (i + 1) << "</a>";
+			ss << "<a href=\"@PWD@" << GetLinkForPage(i) << "\">" << (i + 1) << "</a>";
 	}
 
 	ss << "</div>";

@@ -23,6 +23,8 @@ public:
 	std::string FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments);
 	std::string FormatExcerpt();
 
+	bool SetLanguage(std::string language);
+	bool HasCurrentLanguage();
 	bool GetIgnore();
 	bool GetHidden();
 	std::string GetTitle();
@@ -40,7 +42,7 @@ private:
 		ArticleData();
 		~ArticleData();
 
-		bool ParseYaml();
+		bool ParseYaml(const ArticleData& defaultValues);
 
 		bool m_Ignore;
 		bool m_Hidden;
@@ -57,11 +59,12 @@ private:
 
 	std::vector<ArticleData> m_Data;
 	ArticleData m_CurrentData;
+	bool m_HasCurrentLanguage;
 
 	bool LoadFile();
 	void AddArticleData(std::string rawYaml, std::string rawContent);
 	bool SaveFile();
-	ArticleData FindData(std::string language);
+	bool FindData(std::string language);
 };
 
 #endif // ARTICLE_H

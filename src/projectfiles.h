@@ -15,7 +15,7 @@ public:
 
 	void Configure(std::string projectPath, bool createIfMissing);
 
-	bool LoadMainTemplate(std::string websiteRoot);
+	bool LoadMainTemplate();
 	bool LoadArticleTemplate();
 	bool LoadPageTemplate();
 	bool LoadCommentsTemplate();

@@ -31,6 +31,8 @@ public:
 
 private:
 	void Cleanup();
+	void ExportLanguage(std::string language, boost::filesystem::path exportFolder);
+	void PostProcessContent(std::string& content, int directoryDepth, std::string subFolder);
 	void AddArticleToTag(std::string tagName, Article article);
 	void CreateTag(std::string tagName);
 	std::string GenerateTagLinks(std::string currentTag);
