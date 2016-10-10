@@ -381,7 +381,7 @@ bool Article::LoadFile()
 
 void Article::AddArticleData(std::string rawYaml, std::string rawContent)
 {
-	if (!rawYaml.empty() || !rawContent.empty())
+	if (rawYaml.empty() || !rawContent.empty())
 	{
 		ArticleData articleData;
 

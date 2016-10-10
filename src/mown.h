@@ -37,6 +37,7 @@ private:
 	void CreateTag(std::string tagName);
 	std::string GenerateTagLinks(std::string currentTag);
 	std::string GeneratePageLinks(std::string currentPage);
+	std::string GenerateLanguageLinks(std::string currentLanguage);
 
 	bool LoadConfig(std::string path);
 	bool SetupExportFolder(std::string sourceFolder, std::string targetFolder);

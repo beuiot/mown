@@ -30,7 +30,7 @@ public:
 
 	std::vector<Article> GetPageArticles(int page);
 
-	std::string FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagList, const std::string & pageLinks);
+	std::string FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagList, const std::string & pageLinks, const std::string & languageLinks);
 
 	static bool SortByTitle(const ArticleTag &lhs, const ArticleTag& rhs);
 };

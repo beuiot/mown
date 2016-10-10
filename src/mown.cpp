@@ -231,6 +231,30 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 	return ss.str();
 }
 
+std::string Mown::GenerateLanguageLinks(std::string currentLanguage)
+{
+	std::stringstream ss;
+
+	ss << "<span class=\"wrapper\">";
+	for (auto it = m_Languages.begin(); it != m_Languages.end(); ++it)
+	{
+		if (*it != currentLanguage)
+		{
+			ss << "<a href=\"";
+
+			if (m_Settings.m_DefaultLanguageInRoot && *it == m_Settings.m_DefaultLanguage)
+				ss << (m_LocalPreview ? "../" : "") << "@INDEX@";
+			else
+				ss << "@ROOT@" << *it << (m_LocalPreview ? "/index.html" : "");
+
+			ss << "\">" << *it << "</a> ";
+		}
+	}
+	ss << "</span>";
+
+	return ss.str();
+}
+
 void Mown::Cleanup()
 {
 	m_Pages.clear();
@@ -246,16 +270,13 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	m_Tags.clear();
 	m_SortedTags.clear();
 
-	std::string defaultLanguage = m_Languages[0];
-	bool defaultLanguageInSubfolder = true;
-
-	bool exportInSubfolder = m_Languages.size() > 1 && !(defaultLanguageInSubfolder && language == defaultLanguage);
-	bool exportRootIndex = exportInSubfolder && language == defaultLanguage;
+	bool exportInSubfolder = m_Languages.size() > 1 && !(m_Settings.m_DefaultLanguageInRoot && language == m_Settings.m_DefaultLanguage);
+	bool exportRootIndex = exportInSubfolder && language == m_Settings.m_DefaultLanguage;
 
 	int directoryDepth = exportInSubfolder ? 1 : 0;
 
 	std::string subFolder = m_LocalPreview ? "" : m_WebsiteRoot;
-	if (exportInSubfolder)
+	if (exportInSubfolder && !m_LocalPreview)
 		subFolder += language + "/";
 
 	boost::filesystem::path exportFolder = exportInSubfolder ? folder / language : folder;
@@ -364,9 +385,10 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	{
 		std::string tagLinks = GenerateTagLinks(it->m_Name);
 		std::string pageLinks = GeneratePageLinks(it->m_Name);
+		std::string languageLinks = GenerateLanguageLinks(language);
 		for (int i = 0; i < it->GetPageCount(); i++)
 		{
-			std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks);
+			std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks, languageLinks);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
@@ -420,6 +442,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 		ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->GetTitle()));
+		ContentFactory::ReplaceInString(fileContent, "<!-- languagelinks -->", GenerateLanguageLinks(language));
 
 		PostProcessContent(fileContent, directoryDepth, subFolder);
 

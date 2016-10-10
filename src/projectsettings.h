@@ -15,6 +15,8 @@ public:
 	std::string m_WebsiteName;
 	std::string m_WebsiteDescription;
 	std::string m_Url;
+	std::string m_DefaultLanguage;
+	bool m_DefaultLanguageInRoot;
 };
 
 #endif // PROJECTSETTINGS_H

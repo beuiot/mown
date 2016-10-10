@@ -140,6 +140,7 @@ void ContentFactory::SanitizeString(std::string &source)
 	ReplaceInString(source, "é", "e");
 	ReplaceInString(source, "ê", "e");
 	ReplaceInString(source, "à", "a");
+	ReplaceInString(source, "À", "A");
 	ReplaceInString(source, "è", "e");
 	ReplaceInString(source, "--", "-");
 	ReplaceInString(source, "--", "-");
