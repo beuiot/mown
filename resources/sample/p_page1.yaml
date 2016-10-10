@@ -1,6 +1,7 @@
 ---
 m_Ignore: false
-m_Title: "Page statique 1"
+m_Title: "A propos"
+m_Language: fr
 ---
 
 A propos
@@ -8,3 +9,16 @@ A propos
 ***Draft***
 
 
+---
+m_Title: "About"
+m_Language: en
+---
+
+About
+
+---
+m_Title: "Jaja"
+m_Language: de
+---
+
+Ja

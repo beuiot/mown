@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+  <channel>
+    <title>My own website NOW!</title>
+    <link>http://www.website.com</link>
+    <description>Pensées du moment et trucs que j'ai fait</description>
+    <lastBuildDate>Mon, Oct 10 2016 11:00:00 GMT</lastBuildDate>
+    <item>
+       <title>art_en</title>
+       <link>http://www.website.com/en/2016-10-10-art-en</link>
+       <description>English only article</description>
+       <pubDate>Mon, Oct 10 2016 11:00:00 GMT</pubDate>
+    </item>
+    <item>
+       <title>art_en_fr</title>
+       <link>http://www.website.com/en/2016-10-10-art-en-fr</link>
+       <description>English and French article</description>
+       <pubDate>Mon, Oct 10 2016 11:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
