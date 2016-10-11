@@ -210,6 +210,8 @@ std::string ProjectFiles::GetCommentsTemplateDefaultContent()
 	std::stringstream ss;
 
 	ss << "--- <b>Comments template begin</b><hr>" << std::endl;
+	ss << "Page url: @PAGE_URL@<hr>" << std::endl;
+	ss << "Page identifier: @PAGE_IDENTIFIER@<hr>" << std::endl;
 	ss << "--- <b>Comments template end</b><br />" << std::endl;
 
 	return ss.str();
