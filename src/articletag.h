@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "article.h"
+#include "localization.h"
 
 class ArticleTag
 {
@@ -12,7 +13,10 @@ public:
 	ArticleTag();
 	~ArticleTag();
 
+	void SetLanguage(const Localization& localization, const std::string& language);
+
 	std::string m_Name;
+	std::string GetName();
 	std::string GetPrettyName();
 	bool m_IsIndex;
 	std::vector<Article> m_Articles;
@@ -33,6 +37,10 @@ public:
 	std::string FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagList, const std::string & pageLinks, const std::string & languageLinks);
 
 	static bool SortByTitle(const ArticleTag &lhs, const ArticleTag& rhs);
+
+private:
+	std::string m_CurrentLanguage;
+	Localization m_Localization;
 };
 
 #endif // TAG_H

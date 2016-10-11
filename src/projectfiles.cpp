@@ -144,9 +144,9 @@ std::string ProjectFiles::GetMainTemplateDefaultContent()
 	std::stringstream ss;
 
 	ss << "--- <b>Main template begin</b><hr>" << std::endl;
-	ss << "Website name: <a href=\"@INDEX@\"><!-- head.m_WebsiteName --></a><hr>" << std::endl;
+	ss << "Website name: <a href=\"@INDEX@\">@WEBSITE_NAME@</a><hr>" << std::endl;
 	ss << "Title: <!-- head.m_Title --><hr>" << std::endl;
-	ss << "Website description: <!-- head.m_WebsiteDescription --><hr>" << std::endl;
+	ss << "Website description: @WEBSITE_DESCRIPTION@<hr>" << std::endl;
 	ss << "Page links: <!-- pagelinks --><hr>" << std::endl;
 	ss << "Tag links: <!-- taglinks --><hr>" << std::endl;
 	ss << "Page list: <!-- pagelist --><hr>" << std::endl;

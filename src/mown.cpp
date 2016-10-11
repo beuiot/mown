@@ -45,7 +45,7 @@ bool Mown::Export(const std::string path)
 			if (boost::filesystem::is_regular_file(itr->status()))
 			{
 				boost::filesystem::path filePath = itr->path();
-				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
+				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml" && filePath.filename() != "_localization.yaml")
 				{
 					Article article;
 					article.LoadFromFile(filePath.string(), m_Languages);
@@ -118,7 +118,7 @@ bool Mown::PathHasNewContent(std::string path)
 			if (boost::filesystem::is_regular_file(itr->status()))
 			{
 				boost::filesystem::path filePath = itr->path();
-				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
+				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml" && filePath.filename() != "_localization.yaml")
 				{
 					std::string filePathStr = filePath.string();
 
@@ -192,7 +192,7 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 	return result;
 }
 
-std::string Mown::GenerateTagLinks(std::string currentTag)
+std::string Mown::GenerateTagLinks(const std::string& currentTag, const std::string& language)
 {
 	std::stringstream ss;
 
@@ -342,7 +342,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
-			PostProcessContent(fileContent, directoryDepth, subFolder);
+			PostProcessContent(fileContent, directoryDepth, subFolder, language);
 
 			std::ofstream fout(file.string());
 			if (fout.is_open())
@@ -360,7 +360,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	rssFileContent << "  </channel>" << std::endl << "</rss>" << std::endl;
 
 	std::string fileContent = rssFileContent.str();
-	PostProcessContent(fileContent, directoryDepth, subFolder);
+	PostProcessContent(fileContent, directoryDepth, subFolder, language);
 
 	//std::cout << rssFileContent.str() << std::endl;
 	std::string rssFileName = "rss";
@@ -383,7 +383,8 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 	for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
 	{
-		std::string tagLinks = GenerateTagLinks(it->m_Name);
+		it->SetLanguage(m_Localization, language);
+		std::string tagLinks = GenerateTagLinks(it->m_Name, language);
 		std::string pageLinks = GeneratePageLinks(it->m_Name);
 		std::string languageLinks = GenerateLanguageLinks(language);
 		for (int i = 0; i < it->GetPageCount(); i++)
@@ -395,7 +396,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			if (exportRootIndex && i == 0 && it->m_IsIndex)
 			{
 				std::string upDirectoryFileContent = fileContent;
-				PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder);
+				PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language);
 
 				boost::filesystem::path file = folder / it->GetFileNameForPage(i);
 				std::ofstream fout(file.string());
@@ -406,7 +407,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 				}
 			}
 
-			PostProcessContent(fileContent, directoryDepth, subFolder);
+			PostProcessContent(fileContent, directoryDepth, subFolder, language);
 
 			boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
 			std::ofstream fout(file.string());
@@ -444,7 +445,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->GetTitle()));
 		ContentFactory::ReplaceInString(fileContent, "<!-- languagelinks -->", GenerateLanguageLinks(language));
 
-		PostProcessContent(fileContent, directoryDepth, subFolder);
+		PostProcessContent(fileContent, directoryDepth, subFolder, language);
 
 		std::ofstream fout(file.string());
 		if (fout.is_open())
@@ -457,7 +458,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	}
 }
 
-void Mown::PostProcessContent(std::string& content, int directoryDepth, std::string subFolder)
+void Mown::PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language)
 {
 	std::string resourcesPath = "";
 	for (int i = 0; i < directoryDepth; i++)
@@ -466,6 +467,8 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, std::str
 	ContentFactory::ReplaceInString(content, "@INDEX@", (m_LocalPreview ? "index.html" : m_WebsiteRoot));
 	ContentFactory::ReplaceInString(content, "@ROOT@", resourcesPath);
 	ContentFactory::ReplaceInString(content, "@PWD@", subFolder);
+
+	m_Localization.ProcessString(content, language, m_Settings.m_DefaultLanguage);
 }
 
 void Mown::AddArticleToTag(std::string tagName, Article article)
@@ -597,7 +600,7 @@ std::string Mown::GetLocalUrl()
 	return m_LocalUrl;
 }
 
-bool Mown::LoadConfig(std::string path)
+bool Mown::LoadConfig(const std::string& path)
 {
 	m_ProjectFiles.Configure(path, true);
 
@@ -606,7 +609,11 @@ bool Mown::LoadConfig(std::string path)
 
 	filePath = (d / "_settings.yaml").string();
 	if (!m_Settings.LoadFromFile(filePath) && !m_Settings.SaveToFile(filePath))
-		std::cerr << "Unable to load or create settings file " << (d / "_settings.yaml").string() << std::endl;
+		std::cerr << "Unable to load or create settings file " << filePath << std::endl;
+
+	filePath = (d / "_localization.yaml").string();
+	if (!m_Localization.LoadFromFile(filePath) && !m_Localization.SaveToFile(filePath))
+		std::cerr << "Unable to load or create localization file " << filePath << std::endl;
 
 	bool autoCreateFiles = true;
 

@@ -13,9 +13,26 @@ ArticleTag::~ArticleTag()
 
 }
 
+void ArticleTag::SetLanguage(const Localization& localization, const std::string& language)
+{
+	m_CurrentLanguage = language;
+	m_Localization = localization;
+}
+
+std::string ArticleTag::GetName()
+{
+	std::string result;
+	const std::string id = "TAG_" + m_Name;
+
+	if (!m_Localization.GetLocalizedStringFromId(id, result, m_CurrentLanguage))
+		result = m_Name;
+
+	return result;
+}
+
 std::string ArticleTag::GetPrettyName()
 {
-	std::string result = m_Name;
+	std::string result = GetName();
 	ContentFactory::ReplaceInString(result, " ", "&nbsp;");
 	return result;
 }
@@ -33,7 +50,7 @@ std::string ArticleTag::GetFileNameForPage(int page)
 	}
 	else
 	{
-		std::string name = m_Name;
+		std::string name = GetName();
 		ContentFactory::SanitizeString(name);
 
 		if (page == 0)
@@ -61,7 +78,7 @@ std::string ArticleTag::GetLinkForPage(int page)
 	}
 	else
 	{
-		std::string name = m_Name;
+		std::string name = GetName();
 		ContentFactory::SanitizeString(name);
 		if (page == 0)
 			ss << name << (m_LocalPreview ? ".html" : "");
@@ -120,7 +137,7 @@ std::string ArticleTag::FormatArticleListPage(int page, const std::string & page
 
 	std::string formatedArticles = pageTemplate;
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- content -->", ss.str());
-	ContentFactory::ReplaceInString(formatedArticles, "<!-- head.m_Title -->", (m_IsIndex ? "" : " - " + m_Name) + (page > 0 ? " - page " + std::to_string(page + 1) : ""));
+	ContentFactory::ReplaceInString(formatedArticles, "<!-- head.m_Title -->", (m_IsIndex ? "" : " - " + GetName()) + (page > 0 ? " - page " + std::to_string(page + 1) : ""));
 
 	std::string pageList = "";
 	if (GetPageCount() > 1)

@@ -1,0 +1,12 @@
+WEBSITE_NAME:
+  fr: Nom du site
+  en: Website name
+WEBSITE_DESCRIPTION:
+  fr: Description du site
+  en: Website description
+TAG_Catégorie 2:
+  en: Tag 2
+  de: Nein 2
+TAG_Tous les billets:
+  en: All
+  de: Alles
