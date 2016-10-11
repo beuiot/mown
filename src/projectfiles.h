@@ -1,6 +1,7 @@
 #ifndef PROJECTFILES_H
 #define PROJECTFILES_H
 #include <string>
+#
 
 const std::string kPFMainTemplateFileName = "_template.html";
 const std::string kPFArticleTemplateFileName = "_article_template.html";
@@ -25,6 +26,8 @@ public:
 	std::string GetArticleTemplate();
 	std::string GetPageTemplate();
 	std::string GetCommentsTemplate();
+
+	std::string GetHtaccessFile(std::string defaultLanguage, bool defaultLanguageInSubfolder, std::vector<std::string> languages);
 
 private:
 	bool LoadTemplate(std::string path, std::string &target, std::function<std::string()> defaultContent);

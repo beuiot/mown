@@ -85,6 +85,27 @@ std::string ProjectFiles::GetCommentsTemplate()
 	return m_CommentsTemplate;
 }
 
+std::string ProjectFiles::GetHtaccessFile(std::string defaultLanguage, bool defaultLanguageInSubfolder, std::vector<std::string> languages)
+{
+	std::stringstream ss;
+
+	ss << "RewriteEngine on" << std::endl;
+
+	for (auto it = languages.begin(); it != languages.end(); ++it)
+	{
+		if (*it == defaultLanguage)
+			continue;
+
+		ss << "RewriteCond %{HTTP:Accept-Language} (" << *it << ") [NC]" << std::endl;
+		ss << "RewriteRule ^index.html$ " << *it << "/index.html [L]" << std::endl;
+		ss << std::endl;
+	}
+
+	ss << "RewriteRule ^index.html$ " << (defaultLanguageInSubfolder ? (defaultLanguage + "/") : "") << "index.html [L]" << std::endl;
+
+	return ss.str();
+}
+
 bool ProjectFiles::LoadTemplate(std::string path, std::string &target, std::function<std::string()> defaultContent)
 {
 	target = LoadFile(path);

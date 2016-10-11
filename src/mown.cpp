@@ -453,6 +453,16 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 		//std::cout << it->Dump(false) << std::endl;
 	}
+
+	if (m_Languages.size() > 1 && language == m_Settings.m_DefaultLanguage)
+	{
+		boost::filesystem::path file = folder / ".htaccess";
+		std::ofstream fout(file.string());
+		if (fout.is_open())
+		{
+			fout << m_ProjectFiles.GetHtaccessFile(m_Settings.m_DefaultLanguage, exportInSubfolder, m_Languages);
+		}
+	}
 }
 
 void Mown::PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url)
