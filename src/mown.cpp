@@ -286,7 +286,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 	std::stringstream rssFileContent;
 	rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
-	rssFileContent << "  <channel>" << std::endl << "    <title>" << m_Settings.m_WebsiteName << "</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
+	rssFileContent << "  <channel>" << std::endl << "    <title>@WEBSITE_NAME@</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
 	if (m_Articles.size() > 0)
 	{
 		rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
@@ -340,8 +340,6 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 			PostProcessContent(fileContent, directoryDepth, subFolder, language, url);
 
@@ -392,8 +390,6 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		for (int i = 0; i < it->GetPageCount(); i++)
 		{
 			std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks, languageLinks);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 			if (exportRootIndex && i == 0 && it->m_IsIndex)
 			{
@@ -442,8 +438,6 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 		ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
 		ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
-		ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-		ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
 
 		ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->GetTitle()));
 		ContentFactory::ReplaceInString(fileContent, "<!-- languagelinks -->", GenerateLanguageLinks(language));
