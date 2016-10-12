@@ -127,13 +127,13 @@ std::vector<Article> ArticleTag::GetPageArticles(int page)
 	return result;
 }
 
-std::string ArticleTag::FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagLinks, const std::string & pageLinks, const std::string & languageLinks)
+std::string ArticleTag::FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagLinks, const std::string & pageLinks, const std::string & languageLinks, const ProjectSettings& settings)
 {
 	std::stringstream ss;
 	std::vector<Article> articles = GetPageArticles(page);
 
 	for (auto it = articles.begin(); it != articles.end(); it++)
-		ss << it->FormatContent(articleTemplate, true, m_EnableComments);
+		ss << it->FormatContent(articleTemplate, true, m_EnableComments, settings);
 
 	std::string formatedArticles = pageTemplate;
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- content -->", ss.str());

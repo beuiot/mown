@@ -6,6 +6,7 @@
 
 #include "article.h"
 #include "localization.h"
+#include "projectsettings.h"
 
 class ArticleTag
 {
@@ -34,7 +35,7 @@ public:
 
 	std::vector<Article> GetPageArticles(int page);
 
-	std::string FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagList, const std::string & pageLinks, const std::string & languageLinks);
+	std::string FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagList, const std::string & pageLinks, const std::string & languageLinks, const ProjectSettings& settings);
 
 	static bool SortByTitle(const ArticleTag &lhs, const ArticleTag& rhs);
 

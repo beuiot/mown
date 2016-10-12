@@ -66,7 +66,7 @@ bool Article::LoadFromFile(std::string path, std::vector<std::string>& languages
 		SaveFile();
 	}
 
-	FindData("");
+	FindData("", m_CurrentData);
 
 	return true;
 }
@@ -98,11 +98,21 @@ std::string Article::Dump(bool showContent)
 
 std::string Article::GetFileName()
 {
+	return GetFileNameForLanguage(m_CurrentLanguage);
+}
+
+std::string Article::GetFileNameForLanguage(const std::string& language)
+{
+	ArticleData data;
+
+	if (!FindData(language, data))
+		data = m_CurrentData;
+
 	using namespace boost::gregorian;
 
 	std::stringstream fileName;
 
-	std::string title = m_CurrentData.m_Title;
+	std::string title = data.m_Title;
 	ContentFactory::SanitizeString(title);
 
 	if (!m_IsPage)
@@ -111,7 +121,7 @@ std::string Article::GetFileName()
 		fileName.imbue(std::locale(std::locale::classic(), facet));
 
 		facet->format("%Y-%m-%d");
-		fileName << m_CurrentData.m_Date;
+		fileName << data.m_Date;
 
 		fileName << "-";
 	}
@@ -122,9 +132,24 @@ std::string Article::GetFileName()
 }
 
 
+bool Article::HasFileName(const std::string& fileName)
+{
+	for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
+	{
+		if (GetFileNameForLanguage(it->m_Language) == fileName)
+			return true;
+	}
+	return false;
+}
+
 std::string Article::GetLink()
 {
-	return GetFileName() + (m_LocalPreview ? ".html" : "");
+	return GetLinkForLanguage(m_CurrentLanguage);
+}
+
+std::string Article::GetLinkForLanguage(const std::string& language)
+{
+	return GetFileNameForLanguage(language) + (m_LocalPreview ? ".html" : "");
 }
 
 std::string Article::GetStandardDate()
@@ -142,7 +167,7 @@ std::string Article::GetStandardDate()
 	return fileName.str();
 }
 
-std::string Article::FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments)
+std::string Article::FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments, const ProjectSettings& settings)
 {
 	std::istringstream iss(m_CurrentData.m_Content);
 	std::stringstream sstr;
@@ -209,6 +234,39 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 	ContentFactory::ReplaceInString(result, "<!-- m_CommentsLink -->", commentsLink);
 
 	ContentFactory::ReplaceInString(result, "<!-- m_Content -->", sstr.str());
+
+	bool isCurrentDefaultLanguage = (m_CurrentData.m_Language == settings.m_DefaultLanguage);
+	bool isCurrentInsubfolder = !(isCurrentDefaultLanguage && settings.m_DefaultLanguageInRoot);
+
+	if (m_Data.size() > 1)
+	{
+		std::stringstream languageLinksStream;
+
+		languageLinksStream << "<span class=\"wrapper\">";
+		for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
+		{
+			if (it->m_Language == m_CurrentLanguage)
+				continue;
+
+			bool isDefaultLanguage = (it->m_Language == settings.m_DefaultLanguage);
+			bool isInsubfolder = !(isDefaultLanguage && settings.m_DefaultLanguageInRoot);
+
+			languageLinksStream << "<a href=\"@PWD@";
+			if (m_LocalPreview)
+			{
+				if (isCurrentInsubfolder)
+					languageLinksStream << "../";
+			}
+
+			if (isInsubfolder)
+				languageLinksStream << it->m_Language << "/";
+
+			languageLinksStream << GetFileNameForLanguage(it->m_Language) << (m_LocalPreview ? ".html" : "") << "\">" << it->m_Language << "</a>";
+		}
+		languageLinksStream << "</span>";
+
+		ContentFactory::ReplaceInString(result, "<!-- m_ArticleLanguageLinks -->", languageLinksStream.str());
+	}
 
 	std::stringstream ss;
 
@@ -285,7 +343,8 @@ std::string Article::FormatExcerpt()
 
 bool Article::SetLanguage(std::string language)
 {
-	m_HasCurrentLanguage = FindData(language);
+	m_HasCurrentLanguage = FindData(language, m_CurrentData);
+	m_CurrentLanguage = language;
 	return HasCurrentLanguage();
 }
 
@@ -443,7 +502,7 @@ bool Article::SaveFile()
 	return true;
 }
 
-bool Article::FindData(std::string language)
+bool Article::FindData(std::string language, ArticleData & data)
 {
 	ArticleData result;
 	bool found = false;
@@ -461,7 +520,7 @@ bool Article::FindData(std::string language)
 		}
 	}
 
-	m_CurrentData = result;
+	data = result;
 	return found;
 }
 

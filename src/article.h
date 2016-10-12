@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <boost/date_time.hpp>
+#include "projectsettings.h"
 
 class Article
 {
@@ -18,9 +19,12 @@ public:
 	bool LoadFromFile(std::string path, std::vector<std::string>& languages);
 	std::string GetSourceFilePath();
 	std::string GetFileName();
+	std::string GetFileNameForLanguage(const std::string& language);
+	bool HasFileName(const std::string& fileName);
 	std::string GetLink();
+	std::string GetLinkForLanguage(const std::string& language);
 	std::string GetStandardDate();
-	std::string FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments);
+	std::string FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments, const ProjectSettings& settings);
 	std::string FormatExcerpt();
 
 	bool SetLanguage(std::string language);
@@ -64,7 +68,7 @@ private:
 	bool LoadFile();
 	void AddArticleData(std::string rawYaml, std::string rawContent);
 	bool SaveFile();
-	bool FindData(std::string language);
+	bool FindData(std::string language, ArticleData& data);
 };
 
 #endif // ARTICLE_H

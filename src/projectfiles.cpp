@@ -167,6 +167,7 @@ std::string ProjectFiles::GetMainTemplateDefaultContent()
 	ss << "--- <b>Main template begin</b><hr>" << std::endl;
 	ss << "Website name: <a href=\"@INDEX@\">@WEBSITE_NAME@</a><hr>" << std::endl;
 	ss << "Title: <!-- head.m_Title --><hr>" << std::endl;
+	ss << "Language links: <!-- languagelinks --><hr>" << std::endl;
 	ss << "Website description: @WEBSITE_DESCRIPTION@<hr>" << std::endl;
 	ss << "Page links: <!-- pagelinks --><hr>" << std::endl;
 	ss << "Tag links: <!-- taglinks --><hr>" << std::endl;
@@ -184,6 +185,7 @@ std::string ProjectFiles::GetArticleTemplateDefaultContent()
 	ss << "--- <b>Article template begin</b><hr>" << std::endl;
 	ss << "Date: <!-- m_Date.day -->&nbsp; <!-- m_Date.month -->&nbsp; <!-- m_Date.year --><hr>" << std::endl;
 	ss << "Title: <!-- m_Title --><hr>" << std::endl;
+	ss << "Article language links: <!-- m_ArticleLanguageLinks --><hr>" << std::endl;
 	ss << "Content: <!-- m_Content --><hr>" << std::endl;
 	ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
 	ss << "Tags: <!-- m_Tags --><hr>" << std::endl;
@@ -198,6 +200,7 @@ std::string ProjectFiles::GetPageTemplateDefaultContent()
 
 	ss << "--- <b>Page template begin</b><hr>" << std::endl;
 	ss << "Title: <!-- m_Title --><hr>" << std::endl;
+	ss << "Page language links: <!-- m_ArticleLanguageLinks --><hr>" << std::endl;
 	ss << "Content: <!-- m_Content --><hr>" << std::endl;
 	ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
 	ss << "--- <b>Page template end</b><br />" << std::endl;

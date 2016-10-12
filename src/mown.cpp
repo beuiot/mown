@@ -173,7 +173,7 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 
 	for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
 	{
-		if (it->GetFileName() == previewFile)
+		if (it->HasFileName(previewFile))
 		{
 			result = it->GetSourceFilePath();
 			break;
@@ -182,7 +182,7 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 
 	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
 	{
-		if (it->GetFileName() == previewFile)
+		if (it->HasFileName(previewFile))
 		{
 			result = it->GetSourceFilePath();
 			break;
@@ -342,7 +342,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			file.replace_extension(".html");
 
 			std::string fileContent = m_ProjectFiles.GetMainTemplate();
-			std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetArticleTemplate(), false, m_EnableComments);
+			std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetArticleTemplate(), false, m_EnableComments, m_Settings);
 
 			if (m_EnableComments && it->GetIgnore() == false)
 				formatedArticle += m_ProjectFiles.GetCommentsTemplate();
@@ -398,7 +398,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		std::string languageLinks = GenerateLanguageLinks(language);
 		for (int i = 0; i < it->GetPageCount(); i++)
 		{
-			std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks, languageLinks);
+			std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks, languageLinks, m_Settings);
 
 			if (exportRootIndex && i == 0 && it->m_IsIndex)
 			{
@@ -450,7 +450,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			mainUrl = url;
 
 		std::string fileContent = m_ProjectFiles.GetMainTemplate();
-		std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetPageTemplate(), false, m_EnableComments);
+		std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetPageTemplate(), false, m_EnableComments, m_Settings);
 
 		if (m_EnableComments && it->GetIgnore() == false)
 			formatedArticle += m_ProjectFiles.GetCommentsTemplate();
