@@ -300,6 +300,8 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		it->SetLanguage(language);
 	}
 
+	std::sort(m_Pages.begin(), m_Pages.end(), Article::SortByOrder);
+
 	CreateTag("Tous les billets");
 
 	for (auto it = m_Articles.begin();
@@ -425,7 +427,6 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			}
 		}
 	}
-
 
 	for (auto it = m_Pages.begin();
 	it != m_Pages.end();

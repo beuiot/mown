@@ -38,7 +38,7 @@ public:
 
 
 	static bool SortByDate(const Article &lhs, const Article& rhs);
-
+	static bool SortByOrder(const Article &lhs, const Article &rhs);
 private:
 	class ArticleData
 	{
@@ -50,6 +50,7 @@ private:
 
 		bool m_Ignore;
 		bool m_Hidden;
+		int m_Order;
 		std::string m_Title;
 		std::string m_Language;
 		boost::gregorian::date m_Date;

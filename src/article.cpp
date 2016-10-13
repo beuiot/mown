@@ -378,6 +378,11 @@ bool Article::SortByDate(const Article &lhs, const Article &rhs)
 	return lhs.m_CurrentData.m_Date > rhs.m_CurrentData.m_Date;
 }
 
+bool Article::SortByOrder(const Article &lhs, const Article &rhs)
+{
+	return lhs.m_CurrentData.m_Order < rhs.m_CurrentData.m_Order;
+}
+
 bool Article::LoadFile()
 {
 	std::ifstream file(m_SourceFilePath);
@@ -475,6 +480,7 @@ bool Article::SaveFile()
 
 			config["m_Ignore"] = it->m_Ignore;
 			config["m_Hidden"] = it->m_Hidden;
+			config["m_Order"] = it->m_Order;
 			config["m_Title"] = it->m_Title;
 			config["m_Language"] = it->m_Language;
 
@@ -527,6 +533,7 @@ bool Article::FindData(std::string language, ArticleData & data)
 Article::ArticleData::ArticleData() :
 	m_Ignore(false),
 	m_Hidden(false),
+	m_Order(0),
 	m_Title(""),
 	m_Language("en"),
 	m_Date(boost::posix_time::second_clock::local_time().date()),
@@ -557,6 +564,11 @@ bool Article::ArticleData::ParseYaml(const ArticleData& defaultValues)
 		m_Hidden = config["m_Hidden"].as<bool>();
 	else
 		m_Hidden = defaultValues.m_Hidden;
+
+	if (config["m_Order"] != NULL)
+		m_Order = config["m_Order"].as<int>();
+	else
+		m_Order = defaultValues.m_Order;
 
 	if (config["m_Title"] != NULL)
 		m_Title = config["m_Title"].as<std::string>();
