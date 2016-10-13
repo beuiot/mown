@@ -222,9 +222,9 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 			continue;
 
 		if (it->GetTitle() == currentPage)
-			ss << "<span class=\"current_page\">" << it->GetTitle() << "</span> ";
+			ss << "<span class=\"current_page " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><span class=\"page_title\">" << it->GetTitle() << "</span></span> ";
 		else
-			ss << "<a href=\"@PWD@" << it->GetLink() << "\">" << it->GetTitle() << "</a> ";
+			ss << "<span class=\"page_link " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><a href=\"@PWD@" << it->GetLink() << "\"><span class=\"page_title\">" << it->GetTitle() << "</span></a></span>";
 	}
 	ss << "</span>";
 
