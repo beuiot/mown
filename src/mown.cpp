@@ -486,6 +486,8 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 void Mown::PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl)
 {
+	content = ContentFactory::ReplaceImageTags(content);
+
 	std::string resourcesPath = "";
 	for (int i = 0; i < directoryDepth; i++)
 		resourcesPath += "../";
