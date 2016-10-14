@@ -760,5 +760,11 @@ bool Mown::SetupExportFolder(std::string sourceFolder, std::string targetFolder)
 		CopyDirectory(imageFolder, to / "images");
 	}
 
+	boost::filesystem::path scriptsFolder = from / "scripts";
+	if (boost::filesystem::is_directory(scriptsFolder))
+	{
+		CopyDirectory(scriptsFolder, to / "scripts");
+	}
+
 	return true;
 }
