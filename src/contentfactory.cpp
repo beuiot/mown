@@ -13,10 +13,17 @@ ContentFactory::~ContentFactory()
 
 std::string ContentFactory::ReplaceImageTags(const std::string& input)
 {
+	std::string result = ReplaceImageTags(input, true);
+	result = ReplaceImageTags(result, false);
+	return result;
+}
+
+std::string ContentFactory::ReplaceImageTags(const std::string& input, bool legend)
+{
 	size_t currentIndex = 0;
 	std::string result = input;
 
-	currentIndex = result.find(kCFYImageTag, currentIndex);
+	currentIndex = result.find(legend ? kCFYImageWithLegendTag : kCFYImageTag, currentIndex);
 	while (currentIndex < result.size())
 	{
 
@@ -48,16 +55,21 @@ std::string ContentFactory::ReplaceImageTags(const std::string& input)
 				imageTag.insert(imageTag.end(), fileName.begin(), fileName.end());
 				imageTag.insert(imageTag.size(), "\" alt=\"");
 				imageTag.insert(imageTag.end(), alt.begin(), alt.end());
-				imageTag.insert(imageTag.size(), "\" /></p><p class=\"image_legend\">");
-				imageTag.insert(imageTag.end(), alt.begin(), alt.end());
-				imageTag.insert(imageTag.size(), "</p>");
+				imageTag.insert(imageTag.size(), "\" /></p>");
+
+				if (legend)
+				{
+					imageTag.insert(imageTag.size(), "<p class=\"image_legend\">");
+					imageTag.insert(imageTag.end(), alt.begin(), alt.end());
+					imageTag.insert(imageTag.size(), "</p>");
+				}
 
 				result.erase(currentIndex, closingIndex - currentIndex + 1);
 				result.insert(currentIndex, imageTag);
 			}
 		}
 
-		currentIndex = result.find(kCFYImageTag, currentIndex + 1);
+		currentIndex = result.find(legend ? kCFYImageWithLegendTag : kCFYImageTag, currentIndex + 1);
 	}
 
 	return result;
