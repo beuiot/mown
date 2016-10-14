@@ -754,6 +754,10 @@ bool Mown::SetupExportFolder(std::string sourceFolder, std::string targetFolder)
 	if (boost::filesystem::is_regular_file(styleSheet))
 		boost::filesystem::copy(styleSheet, to / "style.css");
 
+	boost::filesystem::path favicon = from / "favicon.ico";
+	if (boost::filesystem::is_regular_file(favicon))
+		boost::filesystem::copy(favicon, to / "favicon.ico");
+
 	boost::filesystem::path imageFolder = from / "images";
 	if (boost::filesystem::is_directory(imageFolder))
 	{
