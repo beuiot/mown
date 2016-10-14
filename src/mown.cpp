@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <functional>
 
 #include <boost/filesystem.hpp>
 
@@ -533,6 +534,7 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 
 	index += "@INDEXFILE@";
 
+	content = ContentFactory::ReplaceMownLinkTags(content, std::bind(&Mown::getArticleLink, *this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
 	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
 	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);
@@ -588,6 +590,33 @@ void Mown::EmptyFolder(std::string path)
 				boost::filesystem::remove(itr->path());
 		}
 	}
+}
+
+bool Mown::getArticleLink(const std::string & fileName, std::string & link, std::string & title)
+{
+	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
+	{
+		std::string filePath = it->GetSourceFilePath();
+
+		if (filePath.find(fileName) != std::string::npos)
+		{
+			link = it->GetLink();
+			title = it->GetTitle();
+			return true;
+		}
+	}
+	for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
+	{
+		std::string filePath = it->GetSourceFilePath();
+
+		if (filePath.find(fileName) != std::string::npos)
+		{
+			link = it->GetLink();
+			title = it->GetTitle();
+			return true;
+		}
+	}
+	return true;
 }
 
 bool Mown::CopyDirectory(

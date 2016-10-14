@@ -108,6 +108,9 @@ std::string Article::GetFileNameForLanguage(const std::string& language)
 	if (!FindData(language, data))
 		data = m_CurrentData;
 
+	if (!data.m_Link.empty() && !data.m_ExternalLink)
+		return data.m_Link;
+
 	using namespace boost::gregorian;
 
 	std::stringstream fileName;
@@ -189,7 +192,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 				continue;
 		}
 		line = ContentFactory::ReplaceImageTags(line);
-		line = ContentFactory::ReplaceLinkTags(line, m_LocalPreview);
+		line = ContentFactory::ReplaceLinkTags(line);
 
 		if (bulletListStarted && !(line.length() >= 2 && line[0] == '*' && line[1] != '*'))
 		{
@@ -330,7 +333,7 @@ std::string Article::FormatExcerpt()
 			break;
 		}
 		line = ContentFactory::ReplaceImageTags(line);
-		line = ContentFactory::ReplaceLinkTags(line, m_LocalPreview);
+		line = ContentFactory::ReplaceLinkTags(line);
 		if (line.length() > 0)
 			sstr << line;
 
@@ -488,6 +491,7 @@ bool Article::SaveFile()
 			config["m_Order"] = it->m_Order;
 			config["m_IsHomepage"] = it->m_IsHomepage;
 			config["m_Title"] = it->m_Title;
+			config["m_Link"] = it->m_Link;
 			config["m_Language"] = it->m_Language;
 
 			if (!m_IsPage)
@@ -543,6 +547,8 @@ Article::ArticleData::ArticleData() :
 	m_IsHomepage(false),
 	m_Title(""),
 	m_Language("en"),
+	m_Link(""),
+	m_ExternalLink(false),
 	m_Date(boost::posix_time::second_clock::local_time().date()),
 	m_Tags(NULL),
 	m_Content("")
@@ -591,6 +597,13 @@ bool Article::ArticleData::ParseYaml(const ArticleData& defaultValues)
 		m_Language = config["m_Language"].as<std::string>();
 	else
 		m_Language = defaultValues.m_Language;
+
+	if (config["m_Link"] != NULL)
+		m_Link = config["m_Link"].as<std::string>();
+	else
+		m_Link = defaultValues.m_Link;
+
+	m_ExternalLink = m_Link.find("http://") != std::string::npos;
 
 	if (config["m_Date"] != NULL)
 	{

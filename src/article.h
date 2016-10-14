@@ -55,6 +55,8 @@ private:
 		bool m_IsHomepage;
 		std::string m_Title;
 		std::string m_Language;
+		std::string m_Link;
+		bool m_ExternalLink;
 		boost::gregorian::date m_Date;
 		std::vector<std::string> m_Tags;
 

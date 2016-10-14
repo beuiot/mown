@@ -44,6 +44,8 @@ private:
 	bool SetupExportFolder(std::string sourceFolder, std::string targetFolder);
 	void EmptyFolder(std::string path);
 
+	bool getArticleLink(const std::string& fileName, std::string& link, std::string& title);
+
 	std::string m_LocalUrl;
 
 	//TODO : remove boost dependency
