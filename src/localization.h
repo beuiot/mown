@@ -9,6 +9,8 @@ public:
 	Localization();
 	~Localization();
 
+	void Clear();
+
 	bool LoadFromFile(std::string path);
 	bool SaveToFile(std::string path);
 	void SetDefaultValues();

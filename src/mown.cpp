@@ -276,6 +276,7 @@ void Mown::Cleanup()
 	m_Languages.clear();
 	m_SortedTags.clear();
 	m_Settings.SetDefaultValues();
+	m_Localization.Clear();
 }
 
 void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)

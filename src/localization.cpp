@@ -16,6 +16,11 @@ Localization::~Localization()
 
 }
 
+void Localization::Clear()
+{
+	m_LocalizedIds.clear();
+}
+
 bool Localization::LoadFromFile(std::string path)
 {
 	std::ifstream file(path);

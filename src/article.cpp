@@ -57,9 +57,6 @@ bool Article::LoadFromFile(std::string path, std::vector<std::string>& languages
 
 	if (m_Data.size() == 0)
 	{
-		ArticleData data;
-		m_Data.push_back(data);
-
 		hasToSave = true;
 	}
 
@@ -514,22 +511,21 @@ bool Article::LoadFile()
 
 void Article::AddArticleData(std::string rawYaml, std::string rawContent)
 {
-	if (rawYaml.empty() || !rawContent.empty())
+	ArticleData articleData;
+
+	articleData.m_RawYaml = rawYaml;
+	articleData.m_Content = rawContent;
+
+	if (articleData.m_Title.empty())
 	{
-		ArticleData articleData;
-
-		articleData.m_RawYaml = rawYaml;
-		articleData.m_Content = rawContent;
-
-		if (rawYaml.empty())
-		{
-			articleData.m_Tags.push_back("Tag1");
-			boost::filesystem::path p(m_SourceFilePath);
-			articleData.m_Title = p.stem().string();
-		}
-
-		m_Data.push_back(articleData);
+		boost::filesystem::path p(m_SourceFilePath);
+		articleData.m_Title = p.stem().string();
 	}
+
+	if (articleData.m_Tags.size() == 0)
+		articleData.m_Tags.push_back("Tag1");
+
+	m_Data.push_back(articleData);
 }
 
 bool Article::SaveFile()
@@ -680,7 +676,18 @@ bool Article::ArticleData::ParseYaml(const ArticleData& defaultValues)
 
 		for (unsigned i = 0; i < tags.size(); i++) {
 			std::string tag = tags[i].as<std::string>();
-			m_Tags.push_back(tag);
+			bool tagFound = false;
+			for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
+			{
+				if (*it == tag)
+				{
+					tagFound = true;
+					break;
+				}
+			}
+
+			if (!tagFound)
+				m_Tags.push_back(tag);
 		}
 	}
 	else
