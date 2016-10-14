@@ -34,7 +34,7 @@ public:
 	bool GetIgnore();
 	bool GetHidden();
 	bool GetIsHomepage();
-	std::string GetTitle();
+	const std::string& GetTitle() const;
 	const std::vector<std::string>& GetTags();
 
 	std::string Dump(bool showContent);

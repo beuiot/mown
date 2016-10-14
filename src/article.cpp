@@ -386,7 +386,7 @@ bool Article::GetIsHomepage()
 	return m_CurrentData.m_IsHomepage;
 }
 
-std::string Article::GetTitle()
+const std::string& Article::GetTitle() const
 {
 	return m_CurrentData.m_Title;
 }

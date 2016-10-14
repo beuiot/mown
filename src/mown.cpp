@@ -556,6 +556,14 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 		stylesheet = "<link rel=\"stylesheet\" type=\"text/css\" href=\"@ROOT@" + article.GetStylesheet() + "\" />";
 	ContentFactory::ReplaceInString(content, "<!-- stylesheets -->", stylesheet);
 
+	std::string footer = "";
+	const std::string id = "FOOTER_" + article.GetTitle();
+
+	if (!m_Localization.GetLocalizedStringFromId(id, footer, language))
+		m_Localization.GetLocalizedStringFromId(id, footer, m_Settings.m_DefaultLanguage);
+
+	ContentFactory::ReplaceInString(content, "<!-- m_Footer -->", footer);
+
 	ContentFactory::ReplaceInString(content, "@LINK_TRAIL@", (m_LocalPreview ? ".html" : ""));
 	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
 	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);
