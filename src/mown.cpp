@@ -227,7 +227,17 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 		if (it->GetTitle() == currentPage)
 			ss << "<span class=\"current_page " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><span class=\"page_title\">" << it->GetTitle() << "</span></span> ";
 		else
-			ss << "<span class=\"page_link " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><a href=\"@PWD@" << it->GetLink() << "\"><span class=\"page_title\">" << it->GetTitle() << "</span></a></span>";
+		{
+			ss << "<span class=\"page_link " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><a href=\"";
+			if (!it->IsExternallink())
+				ss << "@PWD@";
+			ss << it->GetLink() << "\"";
+
+			if (it->IsExternallink())
+				ss << " target=\"_blank\"";
+
+			ss << "><span class=\"page_title\">" << it->GetTitle() << "</span></a></span>";
+		}
 	}
 	ss << "</span>";
 
@@ -383,18 +393,20 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	std::string fileContent = rssFileContent.str();
 	PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "", Article());
 
-	//std::cout << rssFileContent.str() << std::endl;
-	std::string rssFileName = "rss";
-	if (exportInSubfolder && !exportRootIndex)
-		rssFileName += "_" + language;
-	rssFileName += ".xml";
-	boost::filesystem::path rssFile = folder / rssFileName;
-
-	std::ofstream rssFout(rssFile.string());
-	if (rssFout.is_open())
+	if (m_Articles.size() > 0)
 	{
-		rssFout << fileContent;
-		rssFout.close();
+		std::string rssFileName = "rss";
+		if (exportInSubfolder && !exportRootIndex)
+			rssFileName += "_" + language;
+		rssFileName += ".xml";
+		boost::filesystem::path rssFile = folder / rssFileName;
+
+		std::ofstream rssFout(rssFile.string());
+		if (rssFout.is_open())
+		{
+			rssFout << fileContent;
+			rssFout.close();
+		}
 	}
 
 	for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
@@ -452,7 +464,8 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 
 		it->SetLanguage(language);
 		if (!it->HasCurrentLanguage()
-			|| (!m_ForceAll && it->GetIgnore()))
+			|| (!m_ForceAll && it->GetIgnore())
+			|| it->IsExternallink())
 			continue;
 
 		boost::filesystem::path file = exportFolder / it->GetFileName();
@@ -543,6 +556,7 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 		stylesheet = "<link rel=\"stylesheet\" type=\"text/css\" href=\"@ROOT@" + article.GetStylesheet() + "\" />";
 	ContentFactory::ReplaceInString(content, "<!-- stylesheets -->", stylesheet);
 
+	ContentFactory::ReplaceInString(content, "@LINK_TRAIL@", (m_LocalPreview ? ".html" : ""));
 	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
 	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);
 	ContentFactory::ReplaceInString(content, "@INDEX@", index);

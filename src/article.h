@@ -24,6 +24,7 @@ public:
 	std::string GetLink();
 	std::string GetLinkForLanguage(const std::string& language);
 	std::string GetStandardDate();
+	bool IsExternallink();
 	const std::string& GetStylesheet() const;
 	std::string FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments, const ProjectSettings& settings);
 	std::string FormatExcerpt();

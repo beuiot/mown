@@ -149,6 +149,9 @@ bool Article::HasFileName(const std::string& fileName)
 
 std::string Article::GetLink()
 {
+	if (m_CurrentData.m_ExternalLink)
+		return m_CurrentData.m_Link;
+
 	return GetLinkForLanguage(m_CurrentLanguage);
 }
 
@@ -170,6 +173,11 @@ std::string Article::GetStandardDate()
 	fileName << m_CurrentData.m_Date;
 
 	return fileName.str();
+}
+
+bool Article::IsExternallink()
+{
+	return m_CurrentData.m_ExternalLink;
 }
 
 const std::string& Article::GetStylesheet() const
