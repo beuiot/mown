@@ -192,6 +192,8 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 
 	bool bulletListStarted = false;
 	bool hasExcerpt = false;
+	bool linkStarted = false;
+	int linksStarts = 0;
 
 	std::string line;
 	while (getline(iss, line))
@@ -208,6 +210,24 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 		}
 		line = ContentFactory::ReplaceImageTags(line);
 		line = ContentFactory::ReplaceLinkTags(line);
+
+
+		size_t pos = line.find("<a", 0);
+		while (pos != std::string::npos)
+		{
+			linksStarts++;
+			pos = line.find("</a", pos + 1);
+		}
+
+		pos = line.find("</a", 0);
+		while (pos != std::string::npos)
+		{
+			linksStarts--;
+			pos = line.find("</a", pos + 1);
+		}
+
+		if (linksStarts > 0)
+			linkStarted = true;
 
 		if (bulletListStarted && !(line.length() >= 2 && line[0] == '*' && line[1] != '*'))
 		{
@@ -226,11 +246,32 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 		}
 		else if (line.find("**") == 0)
 			sstr << "<h2>" << line.substr(2) << "</h2>" << std::endl;
-		else if (line.find("<p") != std::string::npos || line.find("<ul") != std::string::npos || line.find("<li") != std::string::npos || line.find("</ul") != std::string::npos)
+		else if (line.find("<p") != std::string::npos
+			|| line.find("<ul") != std::string::npos
+			|| line.find("<li") != std::string::npos
+			|| line.find("</ul") != std::string::npos
+			|| line.find("<div") != std::string::npos
+			|| line.find("</div") != std::string::npos
+			|| line.find("<h") != std::string::npos
+			|| line.find("</h") != std::string::npos
+			|| line.find("</p") != std::string::npos
+			|| line.find("<br") != std::string::npos
+			|| line.find("<tr") != std::string::npos
+			|| line.find("<td") != std::string::npos
+			|| line.find("<table") != std::string::npos
+			|| line.find("</tr") != std::string::npos
+			|| line.find("</td") != std::string::npos
+			|| line.find("</table") != std::string::npos
+			|| linkStarted)
 			sstr << line << std::endl;
 		else if (line.length() > 0)
 			sstr << "<p>" << line << "</p>" << std::endl;
 
+		if (linksStarts <= 0)
+		{
+			linkStarted = false;
+			linksStarts = 0;
+		}
 	}
 
 	std::string result = articleTemplate;
