@@ -33,7 +33,7 @@ public:
 private:
 	void Cleanup();
 	void ExportLanguage(std::string language, boost::filesystem::path exportFolder);
-	void PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl);
+	void PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl, const Article& article);
 	void AddArticleToTag(std::string tagName, Article article);
 	void CreateTag(std::string tagName);
 	std::string GenerateTagLinks(const std::string& currentTag, const std::string& language);

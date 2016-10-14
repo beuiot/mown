@@ -38,6 +38,25 @@ bool Mown::Export(const std::string path)
 		if (!LoadConfig(path))
 			return false;
 
+		boost::filesystem::path exportFolder = sourcePath / (m_LocalPreview ? "mown-preview" : "mown-export");
+
+		std::cout << "Will export to " << exportFolder << std::endl;
+
+		if (boost::filesystem::exists(exportFolder))
+		{
+			if (boost::filesystem::is_directory(exportFolder))
+				EmptyFolder(exportFolder.string());
+			else
+			{
+				boost::filesystem::remove(exportFolder);
+				boost::filesystem::create_directory(exportFolder);
+			}
+		}
+		else
+		{
+			boost::filesystem::create_directory(exportFolder);
+		}
+
 		boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
 		for (boost::filesystem::directory_iterator itr(sourcePath);
 		itr != end_itr;
@@ -57,34 +76,17 @@ bool Mown::Export(const std::string path)
 						m_Pages.push_back(article);
 					else
 						m_Articles.push_back(article);
+
+					std::string stylesheet = article.GetStylesheet();
+					if (!stylesheet.empty())
+					{
+						boost::filesystem::copy(sourcePath / stylesheet, exportFolder / stylesheet);
+					}
 				}
 			}
 		}
 
 		std::sort(m_Articles.begin(), m_Articles.end(), Article::SortByDate);
-
-		boost::filesystem::path exportFolder = sourcePath / "mown-preview";
-
-		if (!m_LocalPreview)
-			exportFolder = sourcePath / "mown-export";
-
-
-		std::cout << "Will export to " << exportFolder << std::endl;
-
-		if (boost::filesystem::exists(exportFolder))
-		{
-			if (boost::filesystem::is_directory(exportFolder))
-				EmptyFolder(exportFolder.string());
-			else
-			{
-				boost::filesystem::remove(exportFolder);
-				boost::filesystem::create_directory(exportFolder);
-			}
-		}
-		else
-		{
-			boost::filesystem::create_directory(exportFolder);
-		}
 
 		SetupExportFolder(sourcePath.string(), exportFolder.string());
 
@@ -361,7 +363,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
 			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
 
-			PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl);
+			PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl, *it);
 
 			std::ofstream fout(file.string());
 			if (fout.is_open())
@@ -379,7 +381,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	rssFileContent << "  </channel>" << std::endl << "</rss>" << std::endl;
 
 	std::string fileContent = rssFileContent.str();
-	PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "");
+	PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "", Article());
 
 	//std::cout << rssFileContent.str() << std::endl;
 	std::string rssFileName = "rss";
@@ -414,7 +416,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			if (exportRootIndex && i == 0 && it->m_IsIndex)
 			{
 				std::string upDirectoryFileContent = fileContent;
-				PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "");
+				PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "", Article());
 
 				boost::filesystem::path file = folder / it->GetFileNameForPage(i);
 				std::ofstream fout(file.string());
@@ -425,7 +427,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 				}
 			}
 
-			PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "");
+			PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "", Article());
 
 			boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
 			std::ofstream fout(file.string());
@@ -474,7 +476,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		if (exportRootIndex && it->GetIsHomepage())
 		{
 			std::string upDirectoryFileContent = fileContent;
-			PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "");
+			PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "", *it);
 
 			boost::filesystem::path file = folder / "index.html";
 			std::ofstream fout(file.string());
@@ -485,7 +487,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 			}
 		}
 
-		PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl);
+		PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl, *it);
 
 		std::ofstream fout(file.string());
 		if (fout.is_open())
@@ -519,7 +521,7 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 	}
 }
 
-void Mown::PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl)
+void Mown::PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl, const Article& article)
 {
 	content = ContentFactory::ReplaceImageTags(content);
 
@@ -535,6 +537,11 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 	index += "@INDEXFILE@";
 
 	content = ContentFactory::ReplaceMownLinkTags(content, std::bind(&Mown::getArticleLink, *this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+	std::string stylesheet = "";
+	if (!article.GetStylesheet().empty())
+		stylesheet = "<link rel=\"stylesheet\" type=\"text/css\" href=\"@ROOT@" + article.GetStylesheet() + "\" />";
+	ContentFactory::ReplaceInString(content, "<!-- stylesheets -->", stylesheet);
 
 	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
 	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);

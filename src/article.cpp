@@ -14,7 +14,8 @@ Article::Article() :
 	m_LocalPreview(true),
 	m_IsPage(false),
 	m_CurrentLanguage(""),
-	m_HasCurrentLanguage(false)
+	m_HasCurrentLanguage(false),
+	m_Stylesheet("")
 {
 
 }
@@ -26,6 +27,7 @@ Article::~Article()
 
 bool Article::LoadFromFile(std::string path, std::vector<std::string>& languages)
 {
+	m_Stylesheet = "";
 	m_SourceFilePath = path;
 	bool hasToSave = false;
 
@@ -168,6 +170,11 @@ std::string Article::GetStandardDate()
 	fileName << m_CurrentData.m_Date;
 
 	return fileName.str();
+}
+
+const std::string& Article::GetStylesheet() const
+{
+	return m_Stylesheet;
 }
 
 std::string Article::FormatContent(const std::string & articleTemplate, bool isInList, bool enableComments, const ProjectSettings& settings)
@@ -402,6 +409,11 @@ bool Article::LoadFile()
 	}
 	else
 	{
+		boost::filesystem::path p(m_SourceFilePath);
+		boost::filesystem::path stylesheetPath = p.parent_path() / (p.stem().string() + ".css");
+		if (boost::filesystem::exists(stylesheetPath))
+			m_Stylesheet = p.stem().string() + ".css";
+
 		if (m_SourceFilePath.find("p_") != std::string::npos)
 		{
 			std::cout << m_SourceFilePath << " is page." << std::endl;
