@@ -539,8 +539,13 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 	content = ContentFactory::ReplaceImageTags(content);
 
 	std::string resourcesPath = "";
-	for (int i = 0; i < directoryDepth; i++)
-		resourcesPath += "../";
+	if (m_LocalPreview)
+	{
+		for (int i = 0; i < directoryDepth; i++)
+			resourcesPath += "../";
+	}
+	else
+		resourcesPath = m_WebsiteRoot;
 
 	std::string index = m_LocalPreview ? "@ROOT@" : m_WebsiteRoot;
 
