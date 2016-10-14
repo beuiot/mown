@@ -31,6 +31,7 @@ public:
 	bool HasCurrentLanguage();
 	bool GetIgnore();
 	bool GetHidden();
+	bool GetIsHomepage();
 	std::string GetTitle();
 	const std::vector<std::string>& GetTags();
 
@@ -51,6 +52,7 @@ private:
 		bool m_Ignore;
 		bool m_Hidden;
 		int m_Order;
+		bool m_IsHomepage;
 		std::string m_Title;
 		std::string m_Language;
 		boost::gregorian::date m_Date;

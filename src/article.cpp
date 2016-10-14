@@ -363,6 +363,11 @@ bool Article::GetHidden()
 	return m_CurrentData.m_Hidden;
 }
 
+bool Article::GetIsHomepage()
+{
+	return m_CurrentData.m_IsHomepage;
+}
+
 std::string Article::GetTitle()
 {
 	return m_CurrentData.m_Title;
@@ -481,6 +486,7 @@ bool Article::SaveFile()
 			config["m_Ignore"] = it->m_Ignore;
 			config["m_Hidden"] = it->m_Hidden;
 			config["m_Order"] = it->m_Order;
+			config["m_IsHomepage"] = it->m_IsHomepage;
 			config["m_Title"] = it->m_Title;
 			config["m_Language"] = it->m_Language;
 
@@ -534,6 +540,7 @@ Article::ArticleData::ArticleData() :
 	m_Ignore(false),
 	m_Hidden(false),
 	m_Order(0),
+	m_IsHomepage(false),
 	m_Title(""),
 	m_Language("en"),
 	m_Date(boost::posix_time::second_clock::local_time().date()),
@@ -569,6 +576,11 @@ bool Article::ArticleData::ParseYaml(const ArticleData& defaultValues)
 		m_Order = config["m_Order"].as<int>();
 	else
 		m_Order = defaultValues.m_Order;
+
+	if (config["m_IsHomepage"] != NULL)
+		m_IsHomepage = config["m_IsHomepage"].as<bool>();
+	else
+		m_IsHomepage = defaultValues.m_IsHomepage;
 
 	if (config["m_Title"] != NULL)
 		m_Title = config["m_Title"].as<std::string>();

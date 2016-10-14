@@ -292,12 +292,20 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
 	}
 
+	bool hasHomePage = false;
+	Article homePage;
 
 	for (auto it = m_Pages.begin();
 	it != m_Pages.end();
 		++it)
 	{
 		it->SetLanguage(language);
+
+		if (it->GetIsHomepage())
+		{
+			hasHomePage = true;
+			homePage = *it;
+		}
 	}
 
 	std::sort(m_Pages.begin(), m_Pages.end(), Article::SortByOrder);
@@ -462,6 +470,20 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->GetTitle()));
 		ContentFactory::ReplaceInString(fileContent, "<!-- languagelinks -->", GenerateLanguageLinks(language));
 
+		if (exportRootIndex && it->GetIsHomepage())
+		{
+			std::string upDirectoryFileContent = fileContent;
+			PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "");
+
+			boost::filesystem::path file = folder / "index.html";
+			std::ofstream fout(file.string());
+			if (fout.is_open())
+			{
+				fout << upDirectoryFileContent;
+				fout.close();
+			}
+		}
+
 		PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl);
 
 		std::ofstream fout(file.string());
@@ -469,6 +491,17 @@ void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
 		{
 			fout << fileContent;
 			fout.close();
+		}
+
+		if (it->GetIsHomepage())
+		{
+			boost::filesystem::path fileIndex = exportFolder / "index.html";
+			std::ofstream foutIndex(fileIndex.string());
+			if (foutIndex.is_open())
+			{
+				foutIndex << fileContent;
+				foutIndex.close();
+			}
 		}
 
 		//std::cout << it->Dump(false) << std::endl;
@@ -493,9 +526,18 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 	for (int i = 0; i < directoryDepth; i++)
 		resourcesPath += "../";
 
+	std::string index = m_LocalPreview ? "@ROOT@" : m_WebsiteRoot;
+
+	if (!(language == m_Settings.m_DefaultLanguage && m_Settings.m_DefaultLanguageInRoot))
+		index += language + "/";
+
+	index += "@INDEXFILE@";
+
+
 	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
 	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);
-	ContentFactory::ReplaceInString(content, "@INDEX@", (m_LocalPreview ? "index.html" : m_WebsiteRoot));
+	ContentFactory::ReplaceInString(content, "@INDEX@", index);
+	ContentFactory::ReplaceInString(content, "@INDEXFILE@", (m_LocalPreview ? "index.html" : ""));
 	ContentFactory::ReplaceInString(content, "@ROOT@", resourcesPath);
 	ContentFactory::ReplaceInString(content, "@LANGUAGE@", language);
 	ContentFactory::ReplaceInString(content, "@PWD@", subFolder);
