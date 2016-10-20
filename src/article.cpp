@@ -277,6 +277,8 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 	if (hasExcerpt)
 		commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">Lire la suite...</a>";
 
+	ContentFactory::ReplaceInString(result, "<!-- m_Content -->", sstr.str());
+
 	if (isInList)
 	{
 		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">" + m_CurrentData.m_Title + "</a>");
@@ -288,8 +290,6 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 	ContentFactory::ReplaceInString(result, "<!-- m_Title -->", m_CurrentData.m_Title);
 
 	ContentFactory::ReplaceInString(result, "<!-- m_CommentsLink -->", commentsLink);
-
-	ContentFactory::ReplaceInString(result, "<!-- m_Content -->", sstr.str());
 
 	bool isCurrentDefaultLanguage = (m_CurrentData.m_Language == settings.m_DefaultLanguage);
 	bool isCurrentInsubfolder = !(isCurrentDefaultLanguage && settings.m_DefaultLanguageInRoot);
@@ -692,6 +692,9 @@ bool Article::ArticleData::ParseYaml(const ArticleData& defaultValues)
 	}
 	else
 		m_Tags = defaultValues.m_Tags;
+
+	if (m_Content.empty())
+		m_Content = defaultValues.m_Content;
 
 	return true;
 }
