@@ -101,8 +101,6 @@ std::string ProjectFiles::GetHtaccessFile(std::string defaultLanguage, bool defa
 		ss << std::endl;
 	}
 
-	ss << "RewriteRule ^index.html$ " << (defaultLanguageInSubfolder ? (defaultLanguage + "/") : "") << "index.html [L]" << std::endl;
-
 	return ss.str();
 }
 
