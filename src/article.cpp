@@ -213,7 +213,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 		while (pos != std::string::npos)
 		{
 			linksStarts++;
-			pos = line.find("</a", pos + 1);
+			pos = line.find("<a", pos + 1);
 		}
 
 		pos = line.find("</a", 0);
@@ -259,6 +259,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 			|| line.find("</tr") != std::string::npos
 			|| line.find("</td") != std::string::npos
 			|| line.find("</table") != std::string::npos
+			|| line.find("<iframe") != std::string::npos
 			|| linkStarted)
 			sstr << line << std::endl;
 		else if (line.length() > 0)
