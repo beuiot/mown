@@ -19,7 +19,7 @@ public:
 	bool LoadFromFile(std::string path, std::vector<std::string>& languages);
 	std::string GetSourceFilePath();
 	std::string GetFileName();
-	std::string GetFileNameForLanguage(const std::string& language);
+	std::string GetFileNameForLanguage(const std::string& language) const;
 	bool HasFileName(const std::string& fileName);
 	std::string GetLink();
 	std::string GetLinkForLanguage(const std::string& language);
@@ -76,7 +76,7 @@ private:
 	bool LoadFile();
 	void AddArticleData(std::string rawYaml, std::string rawContent);
 	bool SaveFile();
-	bool FindData(std::string language, ArticleData& data);
+	bool FindData(std::string language, ArticleData& data) const;
 };
 
 #endif // ARTICLE_H

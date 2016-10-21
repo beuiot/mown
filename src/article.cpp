@@ -100,7 +100,7 @@ std::string Article::GetFileName()
 	return GetFileNameForLanguage(m_CurrentLanguage);
 }
 
-std::string Article::GetFileNameForLanguage(const std::string& language)
+std::string Article::GetFileNameForLanguage(const std::string& language) const
 {
 	ArticleData data;
 
@@ -575,7 +575,7 @@ bool Article::SaveFile()
 	return true;
 }
 
-bool Article::FindData(std::string language, ArticleData & data)
+bool Article::FindData(std::string language, ArticleData & data) const
 {
 	ArticleData result;
 	bool found = false;

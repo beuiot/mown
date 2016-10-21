@@ -570,6 +570,46 @@ void Mown::PostProcessContent(std::string& content, int directoryDepth, const st
 
 	ContentFactory::ReplaceInString(content, "<!-- m_Footer -->", footer);
 
+	for (auto otherLanguage = m_Languages.begin(); otherLanguage != m_Languages.end(); ++otherLanguage)
+	{
+		bool isDefaultLanguage = (*otherLanguage == m_Settings.m_DefaultLanguage);
+		bool isInsubfolder = !(isDefaultLanguage && m_Settings.m_DefaultLanguageInRoot);
+
+		std::stringstream stream;
+		stream << "@ROOT@";
+		if (isInsubfolder)
+			stream << *otherLanguage << "/";
+
+		std::string fileName = article.GetFileNameForLanguage(*otherLanguage);
+		stream << fileName << (m_LocalPreview ? ".html" : "");
+
+		ContentFactory::ReplaceInString(content, "@LOCALIZED_LINK_" + *otherLanguage + "@", stream.str());
+	}
+
+	/*
+	languageLinksStream << "<span class=\"wrapper\">";
+	for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
+	{
+		if (it->m_Language == m_CurrentLanguage)
+			continue;
+
+		bool isDefaultLanguage = (it->m_Language == settings.m_DefaultLanguage);
+		bool isInsubfolder = !(isDefaultLanguage && settings.m_DefaultLanguageInRoot);
+
+		languageLinksStream << "<a href=\"@PWD@";
+		if (m_LocalPreview)
+		{
+			if (isCurrentInsubfolder)
+				languageLinksStream << "../";
+		}
+
+		if (isInsubfolder)
+			languageLinksStream << it->m_Language << "/";
+
+		languageLinksStream << GetFileNameForLanguage(it->m_Language) << (m_LocalPreview ? ".html" : "") << "\">" << it->m_Language << "</a>";
+	}
+	languageLinksStream << "</span>";*/
+
 	ContentFactory::ReplaceInString(content, "@LINK_TRAIL@", (m_LocalPreview ? ".html" : ""));
 	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
 	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);
