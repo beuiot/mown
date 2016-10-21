@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+  <channel>
+    <title>My own website NOW!</title>
+    <link>http://www.website.com</link>
+    <description>Pensées du moment et trucs que j'ai fait</description>
+    <lastBuildDate>Mon, Oct 10 2016 11:00:00 GMT</lastBuildDate>
+    <item>
+       <title>art_de</title>
+       <link>http://www.website.com/de/2016-10-10-art-de</link>
+       <description>Nur Deutsch</description>
+       <pubDate>Mon, Oct 10 2016 11:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

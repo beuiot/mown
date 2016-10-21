@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <functional>
 
 #include <boost/filesystem.hpp>
 
@@ -37,39 +38,7 @@ bool Mown::Export(const std::string path)
 		if (!LoadConfig(path))
 			return false;
 
-		boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
-		for (boost::filesystem::directory_iterator itr(sourcePath);
-		itr != end_itr;
-			++itr)
-		{
-			if (boost::filesystem::is_regular_file(itr->status()))
-			{
-				boost::filesystem::path filePath = itr->path();
-				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
-				{
-					Article article;
-					article.LoadFromFile(filePath.string());
-
-					article.m_LocalPreview = m_LocalPreview;
-
-					if (article.m_IsPage)
-					{
-						if (m_ForceAll || !article.m_Ignore)
-							m_Pages.push_back(article);
-					}
-					else
-						m_Articles.push_back(article);
-				}
-			}
-		}
-
-		std::sort(m_Articles.begin(), m_Articles.end(), Article::SortByDate);
-
-		boost::filesystem::path exportFolder = sourcePath / "mown-preview";
-
-		if (!m_LocalPreview)
-			exportFolder = sourcePath / "mown-export";
-
+		boost::filesystem::path exportFolder = sourcePath / (m_LocalPreview ? "mown-preview" : "mown-export");
 
 		std::cout << "Will export to " << exportFolder << std::endl;
 
@@ -88,138 +57,46 @@ bool Mown::Export(const std::string path)
 			boost::filesystem::create_directory(exportFolder);
 		}
 
+		boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+		for (boost::filesystem::directory_iterator itr(sourcePath);
+		itr != end_itr;
+			++itr)
+		{
+			if (boost::filesystem::is_regular_file(itr->status()))
+			{
+				boost::filesystem::path filePath = itr->path();
+				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml" && filePath.filename() != "_localization.yaml")
+				{
+					Article article;
+					article.LoadFromFile(filePath.string(), m_Languages);
+
+					article.m_LocalPreview = m_LocalPreview;
+
+					if (article.m_IsPage)
+						m_Pages.push_back(article);
+					else
+						m_Articles.push_back(article);
+
+					std::string stylesheet = article.GetStylesheet();
+					if (!stylesheet.empty())
+					{
+						boost::filesystem::copy(sourcePath / stylesheet, exportFolder / stylesheet);
+					}
+				}
+			}
+		}
+
+		std::sort(m_Articles.begin(), m_Articles.end(), Article::SortByDate);
+
 		SetupExportFolder(sourcePath.string(), exportFolder.string());
 
 		m_LocalUrl = "file:///" + exportFolder.string() + "/index.html";
 		ContentFactory::ReplaceInString(m_LocalUrl, "\\", "/");
 
-		std::stringstream rssFileContent;
-		rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
-		rssFileContent << "  <channel>" << std::endl << "    <title>" << m_Settings.m_WebsiteName << "</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
-		if (m_Articles.size() > 0)
+		for (auto it = m_Languages.begin(); it != m_Languages.end(); ++it)
 		{
-			rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
+			ExportLanguage(*it, exportFolder);
 		}
-
-		CreateTag("Tous les billets");
-
-		for (auto it = m_Articles.begin();
-		it != m_Articles.end();
-			++it)
-		{
-			if (m_ForceAll || it->m_Ignore == false)
-			{
-				if (!it->m_Hidden)
-				{
-					AddArticleToTag("Tous les billets", *it);
-
-					for (auto itTag = it->m_Tags.begin();
-					itTag != it->m_Tags.end();
-						++itTag)
-						AddArticleToTag(*itTag, *it);
-
-					rssFileContent << "    <item>" << std::endl;
-					rssFileContent << "       <title>" << it->m_Title << "</title>" << std::endl;
-					rssFileContent << "       <link>" << m_Settings.m_Url << it->GetLink() << "</link>" << std::endl;
-					rssFileContent << "       <description>" << it->FormatExcerpt() << "</description>" << std::endl;
-					rssFileContent << "       <pubDate>" << it->GetStandardDate() << "</pubDate>" << std::endl;
-					rssFileContent << "    </item>" << std::endl;
-				}
-				boost::filesystem::path file = exportFolder / it->GetFileName();
-				file.replace_extension(".html");
-
-				std::string fileContent = m_ProjectFiles.GetMainTemplate();
-				std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetArticleTemplate(), false, m_EnableComments);
-
-				if (m_EnableComments && it->m_Ignore == false)
-					formatedArticle += m_ProjectFiles.GetCommentsTemplate();
-
-				ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
-				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
-				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
-
-
-				std::ofstream fout(file.string());
-				if (fout.is_open())
-				{
-					fout << fileContent;
-					fout.close();
-				}
-
-				//std::cout << it->Dump(false) << std::endl;
-
-			}
-		}
-
-
-		rssFileContent << "  </channel>" << std::endl << "</rss>" << std::endl;
-
-		//std::cout << rssFileContent.str() << std::endl;
-		boost::filesystem::path rssFile = exportFolder / "rss.xml";
-		std::ofstream rssFout(rssFile.string());
-		if (rssFout.is_open())
-		{
-			rssFout << rssFileContent.str();
-			rssFout.close();
-		}
-
-		for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
-			m_SortedTags.push_back(it->second);
-
-		std::sort(m_SortedTags.begin(), m_SortedTags.end(), ArticleTag::SortByTitle);
-
-		for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
-		{
-			std::string tagLinks = GenerateTagLinks(it->m_Name);
-			std::string pageLinks = GeneratePageLinks(it->m_Name);
-			for (int i = 0; i < it->GetPageCount(); i++)
-			{
-				std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks);
-				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-				ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
-
-				boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
-				std::ofstream fout(file.string());
-				if (fout.is_open())
-				{
-					fout << fileContent;
-					fout.close();
-				}
-			}
-		}
-
-
-		for (auto it = m_Pages.begin();
-		it != m_Pages.end();
-			++it)
-		{
-			boost::filesystem::path file = exportFolder / it->GetFileName();
-			file.replace_extension(".html");
-
-			std::string fileContent = m_ProjectFiles.GetMainTemplate();
-			std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetPageTemplate(), false, m_EnableComments);
-
-			if (m_EnableComments && it->m_Ignore == false)
-				formatedArticle += m_ProjectFiles.GetCommentsTemplate();
-
-			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->m_Title);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteName -->", m_Settings.m_WebsiteName);
-			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_WebsiteDescription -->", m_Settings.m_WebsiteDescription);
-
-			ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->m_Title));
-
-			std::ofstream fout(file.string());
-			if (fout.is_open())
-			{
-				fout << fileContent;
-				fout.close();
-			}
-
-			//std::cout << it->Dump(false) << std::endl;
-		}
-
 	}
 	else
 	{
@@ -244,7 +121,7 @@ bool Mown::PathHasNewContent(std::string path)
 			if (boost::filesystem::is_regular_file(itr->status()))
 			{
 				boost::filesystem::path filePath = itr->path();
-				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml")
+				if (filePath.extension().string() == ".yaml" && filePath.filename() != "_settings.yaml" && filePath.filename() != "_localization.yaml")
 				{
 					std::string filePathStr = filePath.string();
 
@@ -299,7 +176,7 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 
 	for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
 	{
-		if (it->GetFileName() == previewFile)
+		if (it->HasFileName(previewFile))
 		{
 			result = it->GetSourceFilePath();
 			break;
@@ -308,7 +185,7 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 
 	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
 	{
-		if (it->GetFileName() == previewFile)
+		if (it->HasFileName(previewFile))
 		{
 			result = it->GetSourceFilePath();
 			break;
@@ -318,7 +195,7 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 	return result;
 }
 
-std::string Mown::GenerateTagLinks(std::string currentTag)
+std::string Mown::GenerateTagLinks(const std::string& currentTag, const std::string& language)
 {
 	std::stringstream ss;
 
@@ -328,7 +205,7 @@ std::string Mown::GenerateTagLinks(std::string currentTag)
 		if (it->m_Name == currentTag)
 			ss << "<span class=\"current_tag\">" << it->GetPrettyName() << "</span> ";
 		else
-			ss << "<a href=\"" << it->GetLinkForPage(0) << "\">" << it->GetPrettyName() << "</a> ";
+			ss << "<a href=\"@PWD@" << it->GetLinkForPage(0) << "\">" << it->GetPrettyName() << "</a> ";
 	}
 	ss << "</span>";
 
@@ -342,10 +219,49 @@ std::string Mown::GeneratePageLinks(std::string currentPage)
 	ss << "<span class=\"wrapper\">";
 	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
 	{
-		if (it->m_Title == currentPage)
-			ss << "<span class=\"current_page\">" << it->m_Title << "</span> ";
+		if (!it->HasCurrentLanguage()
+			|| (!m_ForceAll && it->GetIgnore())
+			|| it->GetHidden())
+			continue;
+
+		if (it->GetTitle() == currentPage)
+			ss << "<span class=\"current_page " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><span class=\"page_title\">" << it->GetTitle() << "</span></span> ";
 		else
-			ss << "<a href=\"" << it->GetLink() << "\">" << it->m_Title << "</a> ";
+		{
+			ss << "<span class=\"page_link " << it->GetFileNameForLanguage(m_Settings.m_DefaultLanguage) << "\"><a href=\"";
+			if (!it->IsExternallink())
+				ss << "@PWD@";
+			ss << it->GetLink() << "\"";
+
+			if (it->IsExternallink())
+				ss << " target=\"_blank\"";
+
+			ss << "><span class=\"page_title\">" << it->GetTitle() << "</span></a></span>";
+		}
+	}
+	ss << "</span>";
+
+	return ss.str();
+}
+
+std::string Mown::GenerateLanguageLinks(std::string currentLanguage)
+{
+	std::stringstream ss;
+
+	ss << "<span class=\"wrapper\">";
+	for (auto it = m_Languages.begin(); it != m_Languages.end(); ++it)
+	{
+		if (*it != currentLanguage)
+		{
+			ss << "<a href=\"";
+
+			if (m_Settings.m_DefaultLanguageInRoot && *it == m_Settings.m_DefaultLanguage)
+				ss << (m_LocalPreview ? "../" : "") << "@INDEX@";
+			else
+				ss << "@ROOT@" << *it << (m_LocalPreview ? "/index.html" : "");
+
+			ss << "\">" << *it << "</a> ";
+		}
 	}
 	ss << "</span>";
 
@@ -357,8 +273,353 @@ void Mown::Cleanup()
 	m_Pages.clear();
 	m_Articles.clear();
 	m_Tags.clear();
+	m_Languages.clear();
 	m_SortedTags.clear();
 	m_Settings.SetDefaultValues();
+	m_Localization.Clear();
+}
+
+void Mown::ExportLanguage(std::string language, boost::filesystem::path folder)
+{
+	m_Tags.clear();
+	m_SortedTags.clear();
+
+	bool exportInSubfolder = m_Languages.size() > 1 && !(m_Settings.m_DefaultLanguageInRoot && language == m_Settings.m_DefaultLanguage);
+	bool exportRootIndex = exportInSubfolder && language == m_Settings.m_DefaultLanguage;
+
+	int directoryDepth = exportInSubfolder ? 1 : 0;
+
+	std::string subFolder = m_LocalPreview ? "" : m_WebsiteRoot;
+	if (exportInSubfolder && !m_LocalPreview)
+		subFolder += language + "/";
+
+	boost::filesystem::path exportFolder = exportInSubfolder ? folder / language : folder;
+
+	if (!boost::filesystem::exists(exportFolder))
+		boost::filesystem::create_directory(exportFolder);
+
+	std::stringstream rssFileContent;
+	rssFileContent << "<?xml version=\"1.0\"?>" << std::endl << "<rss version=\"2.0\">" << std::endl;
+	rssFileContent << "  <channel>" << std::endl << "    <title>@WEBSITE_NAME@</title>" << std::endl << "    <link>" << m_Settings.m_Url << "</link>" << std::endl << "    <description>Pensées du moment et trucs que j'ai fait</description>" << std::endl;
+	if (m_Articles.size() > 0)
+	{
+		rssFileContent << "    <lastBuildDate>" << m_Articles[0].GetStandardDate() << "</lastBuildDate>" << std::endl;
+	}
+
+	bool hasHomePage = false;
+	Article homePage;
+
+	for (auto it = m_Pages.begin();
+	it != m_Pages.end();
+		++it)
+	{
+		it->SetLanguage(language);
+
+		if (it->GetIsHomepage())
+		{
+			hasHomePage = true;
+			homePage = *it;
+		}
+	}
+
+	std::sort(m_Pages.begin(), m_Pages.end(), Article::SortByOrder);
+
+	CreateTag("Tous les billets");
+
+	for (auto it = m_Articles.begin();
+	it != m_Articles.end();
+		++it)
+	{
+		std::string mainUrl = "";
+		if (it->SetLanguage(m_Settings.m_DefaultLanguage))
+		{
+			mainUrl = m_Settings.m_Url + "/" + (m_Settings.m_DefaultLanguageInRoot ? "" : (m_Settings.m_DefaultLanguage + "/")) + it->GetLink();
+		}
+
+		bool hasWantedLanguage = it->SetLanguage(language);
+		if (!hasWantedLanguage)
+			continue;
+
+		if (m_ForceAll || it->GetIgnore() == false)
+		{
+			std::string url = m_Settings.m_Url + (m_LocalPreview ? "/" : "") + "@PWD@" + it->GetLink();
+			if (mainUrl.empty())
+				mainUrl = url;
+
+			if (!it->GetHidden())
+			{
+				AddArticleToTag("Tous les billets", *it);
+
+				for (auto itTag = it->GetTags().begin();
+				itTag != it->GetTags().end();
+					++itTag)
+					AddArticleToTag(*itTag, *it);
+
+				rssFileContent << "    <item>" << std::endl;
+				rssFileContent << "       <title>" << it->GetTitle() << "</title>" << std::endl;
+				rssFileContent << "       <link>" << url << "</link>" << std::endl;
+				rssFileContent << "       <description>" << it->FormatExcerpt() << "</description>" << std::endl;
+				rssFileContent << "       <pubDate>" << it->GetStandardDate() << "</pubDate>" << std::endl;
+				rssFileContent << "    </item>" << std::endl;
+			}
+			boost::filesystem::path file = exportFolder / it->GetFileName();
+			file.replace_extension(".html");
+
+			std::string fileContent = m_ProjectFiles.GetMainTemplate();
+			std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetArticleTemplate(), false, m_EnableComments, m_Settings);
+
+			if (m_EnableComments && it->GetIgnore() == false)
+				formatedArticle += m_ProjectFiles.GetCommentsTemplate();
+
+			ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
+			ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
+
+			PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl, *it);
+
+			std::ofstream fout(file.string());
+			if (fout.is_open())
+			{
+				fout << fileContent;
+				fout.close();
+			}
+
+			//std::cout << it->Dump(false) << std::endl;
+
+		}
+	}
+
+
+	rssFileContent << "  </channel>" << std::endl << "</rss>" << std::endl;
+
+	std::string fileContent = rssFileContent.str();
+	PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "", Article());
+
+	if (m_Articles.size() > 0)
+	{
+		std::string rssFileName = "rss";
+		if (exportInSubfolder && !exportRootIndex)
+			rssFileName += "_" + language;
+		rssFileName += ".xml";
+		boost::filesystem::path rssFile = folder / rssFileName;
+
+		std::ofstream rssFout(rssFile.string());
+		if (rssFout.is_open())
+		{
+			rssFout << fileContent;
+			rssFout.close();
+		}
+	}
+
+	for (auto it = m_Tags.begin(); it != m_Tags.end(); ++it)
+		m_SortedTags.push_back(it->second);
+
+	std::sort(m_SortedTags.begin(), m_SortedTags.end(), ArticleTag::SortByTitle);
+
+	for (auto it = m_SortedTags.begin(); it != m_SortedTags.end(); ++it)
+	{
+		it->SetLanguage(m_Localization, language);
+
+		std::string tagLinks = GenerateTagLinks(it->m_Name, language);
+		std::string pageLinks = GeneratePageLinks(it->m_Name);
+		std::string languageLinks = GenerateLanguageLinks(language);
+		for (int i = 0; i < it->GetPageCount(); i++)
+		{
+			std::string fileContent = it->FormatArticleListPage(i, m_ProjectFiles.GetMainTemplate(), m_ProjectFiles.GetArticleTemplate(), tagLinks, pageLinks, languageLinks, m_Settings);
+
+			if (exportRootIndex && i == 0 && it->m_IsIndex)
+			{
+				std::string upDirectoryFileContent = fileContent;
+				PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "", Article());
+
+				boost::filesystem::path file = folder / it->GetFileNameForPage(i);
+				std::ofstream fout(file.string());
+				if (fout.is_open())
+				{
+					fout << upDirectoryFileContent;
+					fout.close();
+				}
+			}
+
+			PostProcessContent(fileContent, directoryDepth, subFolder, language, "", "", Article());
+
+			boost::filesystem::path file = exportFolder / it->GetFileNameForPage(i);
+			std::ofstream fout(file.string());
+			if (fout.is_open())
+			{
+				fout << fileContent;
+				fout.close();
+			}
+		}
+	}
+
+	for (auto it = m_Pages.begin();
+	it != m_Pages.end();
+		++it)
+	{
+
+		std::string mainUrl = "";
+		if (it->SetLanguage(m_Settings.m_DefaultLanguage))
+		{
+			mainUrl = m_Settings.m_Url + "/" + (m_Settings.m_DefaultLanguageInRoot ? "" : (m_Settings.m_DefaultLanguage + "/")) + it->GetLink();
+		}
+
+		it->SetLanguage(language);
+		if (!it->HasCurrentLanguage()
+			|| (!m_ForceAll && it->GetIgnore())
+			|| it->IsExternallink())
+			continue;
+
+		boost::filesystem::path file = exportFolder / it->GetFileName();
+		file.replace_extension(".html");
+		std::string url = m_Settings.m_Url + (m_LocalPreview ? "/" : "") + "@PWD@" + it->GetLink();
+		if (mainUrl.empty())
+			mainUrl = url;
+
+		std::string fileContent = m_ProjectFiles.GetMainTemplate();
+		std::string formatedArticle = it->FormatContent(m_ProjectFiles.GetPageTemplate(), false, m_EnableComments, m_Settings);
+
+		if (m_EnableComments && it->GetIgnore() == false)
+			formatedArticle += m_ProjectFiles.GetCommentsTemplate();
+
+		ContentFactory::ReplaceInString(fileContent, "<!-- content -->", formatedArticle);
+		ContentFactory::ReplaceInString(fileContent, "<!-- head.m_Title -->", " - " + it->GetTitle());
+
+		ContentFactory::ReplaceInString(fileContent, "<!-- pagelinks -->", GeneratePageLinks(it->GetTitle()));
+		ContentFactory::ReplaceInString(fileContent, "<!-- languagelinks -->", GenerateLanguageLinks(language));
+
+		if (exportRootIndex && it->GetIsHomepage())
+		{
+			std::string upDirectoryFileContent = fileContent;
+			PostProcessContent(upDirectoryFileContent, 0, m_LocalPreview ? language + "/" : subFolder, language, "", "", *it);
+
+			boost::filesystem::path file = folder / "index.html";
+			std::ofstream fout(file.string());
+			if (fout.is_open())
+			{
+				fout << upDirectoryFileContent;
+				fout.close();
+			}
+		}
+
+		PostProcessContent(fileContent, directoryDepth, subFolder, language, url, mainUrl, *it);
+
+		std::ofstream fout(file.string());
+		if (fout.is_open())
+		{
+			fout << fileContent;
+			fout.close();
+		}
+
+		if (it->GetIsHomepage())
+		{
+			boost::filesystem::path fileIndex = exportFolder / "index.html";
+			std::ofstream foutIndex(fileIndex.string());
+			if (foutIndex.is_open())
+			{
+				foutIndex << fileContent;
+				foutIndex.close();
+			}
+		}
+
+		//std::cout << it->Dump(false) << std::endl;
+	}
+
+	if (m_Languages.size() > 1 && language == m_Settings.m_DefaultLanguage)
+	{
+		boost::filesystem::path file = folder / ".htaccess";
+		std::ofstream fout(file.string());
+		if (fout.is_open())
+		{
+			fout << m_ProjectFiles.GetHtaccessFile(m_Settings.m_DefaultLanguage, exportInSubfolder, m_Languages);
+		}
+	}
+}
+
+void Mown::PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl, const Article& article)
+{
+	content = ContentFactory::ReplaceImageTags(content);
+
+	std::string resourcesPath = "";
+	if (m_LocalPreview)
+	{
+		for (int i = 0; i < directoryDepth; i++)
+			resourcesPath += "../";
+	}
+	else
+		resourcesPath = m_WebsiteRoot;
+
+	std::string index = m_LocalPreview ? "@ROOT@" : m_WebsiteRoot;
+
+	if (!(language == m_Settings.m_DefaultLanguage && m_Settings.m_DefaultLanguageInRoot))
+		index += language + "/";
+
+	index += "@INDEXFILE@";
+
+	content = ContentFactory::ReplaceMownLinkTags(content, std::bind(&Mown::getArticleLink, *this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+	std::string stylesheet = "";
+	if (!article.GetStylesheet().empty())
+		stylesheet = "<link rel=\"stylesheet\" type=\"text/css\" href=\"@ROOT@" + article.GetStylesheet() + "\" />";
+	ContentFactory::ReplaceInString(content, "<!-- stylesheets -->", stylesheet);
+
+	std::string footer = "";
+	const std::string id = "FOOTER_" + article.GetTitle();
+
+	if (!m_Localization.GetLocalizedStringFromId(id, footer, language))
+		m_Localization.GetLocalizedStringFromId(id, footer, m_Settings.m_DefaultLanguage);
+
+	ContentFactory::ReplaceInString(content, "<!-- m_Footer -->", footer);
+
+	for (auto otherLanguage = m_Languages.begin(); otherLanguage != m_Languages.end(); ++otherLanguage)
+	{
+		bool isDefaultLanguage = (*otherLanguage == m_Settings.m_DefaultLanguage);
+		bool isInsubfolder = !(isDefaultLanguage && m_Settings.m_DefaultLanguageInRoot);
+
+		std::stringstream stream;
+		stream << "@ROOT@";
+		if (isInsubfolder)
+			stream << *otherLanguage << "/";
+
+		std::string fileName = article.GetFileNameForLanguage(*otherLanguage);
+		stream << fileName << (m_LocalPreview ? ".html" : "");
+
+		ContentFactory::ReplaceInString(content, "@LOCALIZED_LINK_" + *otherLanguage + "@", stream.str());
+	}
+
+	/*
+	languageLinksStream << "<span class=\"wrapper\">";
+	for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
+	{
+		if (it->m_Language == m_CurrentLanguage)
+			continue;
+
+		bool isDefaultLanguage = (it->m_Language == settings.m_DefaultLanguage);
+		bool isInsubfolder = !(isDefaultLanguage && settings.m_DefaultLanguageInRoot);
+
+		languageLinksStream << "<a href=\"@PWD@";
+		if (m_LocalPreview)
+		{
+			if (isCurrentInsubfolder)
+				languageLinksStream << "../";
+		}
+
+		if (isInsubfolder)
+			languageLinksStream << it->m_Language << "/";
+
+		languageLinksStream << GetFileNameForLanguage(it->m_Language) << (m_LocalPreview ? ".html" : "") << "\">" << it->m_Language << "</a>";
+	}
+	languageLinksStream << "</span>";*/
+
+	ContentFactory::ReplaceInString(content, "@LINK_TRAIL@", (m_LocalPreview ? ".html" : ""));
+	ContentFactory::ReplaceInString(content, "@PAGE_URL@", url);
+	ContentFactory::ReplaceInString(content, "@PAGE_IDENTIFIER@", mainUrl);
+	ContentFactory::ReplaceInString(content, "@INDEX@", index);
+	ContentFactory::ReplaceInString(content, "@INDEXFILE@", (m_LocalPreview ? "index.html" : ""));
+	ContentFactory::ReplaceInString(content, "@ROOT@", resourcesPath);
+	ContentFactory::ReplaceInString(content, "@LANGUAGE@", language);
+	ContentFactory::ReplaceInString(content, "@PWD@", subFolder);
+
+	m_Localization.ProcessString(content, language, m_Settings.m_DefaultLanguage);
 }
 
 void Mown::AddArticleToTag(std::string tagName, Article article)
@@ -404,6 +665,33 @@ void Mown::EmptyFolder(std::string path)
 				boost::filesystem::remove(itr->path());
 		}
 	}
+}
+
+bool Mown::getArticleLink(const std::string & fileName, std::string & link, std::string & title)
+{
+	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
+	{
+		std::string filePath = it->GetSourceFilePath();
+
+		if (filePath.find(fileName) != std::string::npos)
+		{
+			link = it->GetLink();
+			title = it->GetTitle();
+			return true;
+		}
+	}
+	for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
+	{
+		std::string filePath = it->GetSourceFilePath();
+
+		if (filePath.find(fileName) != std::string::npos)
+		{
+			link = it->GetLink();
+			title = it->GetTitle();
+			return true;
+		}
+	}
+	return true;
 }
 
 bool Mown::CopyDirectory(
@@ -490,7 +778,7 @@ std::string Mown::GetLocalUrl()
 	return m_LocalUrl;
 }
 
-bool Mown::LoadConfig(std::string path)
+bool Mown::LoadConfig(const std::string& path)
 {
 	m_ProjectFiles.Configure(path, true);
 
@@ -499,11 +787,15 @@ bool Mown::LoadConfig(std::string path)
 
 	filePath = (d / "_settings.yaml").string();
 	if (!m_Settings.LoadFromFile(filePath) && !m_Settings.SaveToFile(filePath))
-		std::cerr << "Unable to load or create settings file " << (d / "_settings.yaml").string() << std::endl;
+		std::cerr << "Unable to load or create settings file " << filePath << std::endl;
+
+	filePath = (d / "_localization.yaml").string();
+	if (!m_Localization.LoadFromFile(filePath) && !m_Localization.SaveToFile(filePath))
+		std::cerr << "Unable to load or create localization file " << filePath << std::endl;
 
 	bool autoCreateFiles = true;
 
-	if (!m_ProjectFiles.LoadMainTemplate((m_LocalPreview ? "index.html" : m_WebsiteRoot)))
+	if (!m_ProjectFiles.LoadMainTemplate())
 		return false;
 
 	if (!m_ProjectFiles.LoadArticleTemplate())
@@ -530,10 +822,20 @@ bool Mown::SetupExportFolder(std::string sourceFolder, std::string targetFolder)
 	if (boost::filesystem::is_regular_file(styleSheet))
 		boost::filesystem::copy(styleSheet, to / "style.css");
 
+	boost::filesystem::path favicon = from / "favicon.ico";
+	if (boost::filesystem::is_regular_file(favicon))
+		boost::filesystem::copy(favicon, to / "favicon.ico");
+
 	boost::filesystem::path imageFolder = from / "images";
 	if (boost::filesystem::is_directory(imageFolder))
 	{
 		CopyDirectory(imageFolder, to / "images");
+	}
+
+	boost::filesystem::path scriptsFolder = from / "scripts";
+	if (boost::filesystem::is_directory(scriptsFolder))
+	{
+		CopyDirectory(scriptsFolder, to / "scripts");
 	}
 
 	return true;

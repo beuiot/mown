@@ -1,3 +1,5 @@
-m_WebsiteName: "My Own Website NOW!"
-m_WebsiteDescription: "Website description"
-m_Url: "http://www.website.com/"
+m_DefaultLanguage: fr
+m_WebsiteDescription: Yeeeeeeeeep
+m_Url: http://www.website.com
+m_WebsiteName: My own website NOW!
+m_DefaultLanguageInRoot: true

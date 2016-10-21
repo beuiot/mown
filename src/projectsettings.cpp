@@ -28,14 +28,14 @@ bool ProjectSettings::LoadFromFile(std::string path)
 	{
 		YAML::Node config = YAML::Load(file);
 
-		if (config["m_WebsiteName"] != NULL)
-			m_WebsiteName = config["m_WebsiteName"].as<std::string>();
-
-		if (config["m_WebsiteDescription"] != NULL)
-			m_WebsiteDescription = config["m_WebsiteDescription"].as<std::string>();
-
 		if (config["m_Url"] != NULL)
 			m_Url = config["m_Url"].as<std::string>();
+
+		if (config["m_DefaultLanguage"] != NULL)
+			m_DefaultLanguage = config["m_DefaultLanguage"].as<std::string>();
+
+		if (config["m_DefaultLanguageInRoot"] != NULL)
+			m_DefaultLanguageInRoot = config["m_DefaultLanguageInRoot"].as<bool>();
 
 	}
 	return true;
@@ -54,9 +54,9 @@ bool ProjectSettings::SaveToFile(std::string path)
 	{
 		YAML::Node config;
 
-		config["m_WebsiteName"] = m_WebsiteName;
-		config["m_WebsiteDescription"] = m_WebsiteDescription;
 		config["m_Url"] = m_Url;
+		config["m_DefaultLanguage"] = m_DefaultLanguage;
+		config["m_DefaultLanguageInRoot"] = m_DefaultLanguageInRoot;
 
 		file << config;
 	}
@@ -66,7 +66,7 @@ bool ProjectSettings::SaveToFile(std::string path)
 
 void ProjectSettings::SetDefaultValues()
 {
-	m_WebsiteName = "My own website NOW!";
-	m_WebsiteDescription = "Yeeeeeeeeep";
 	m_Url = "http://www.website.com";
+	m_DefaultLanguage = "en";
+	m_DefaultLanguageInRoot = true;
 }

@@ -6,6 +6,7 @@
 #include <map>
 #include <boost/filesystem.hpp>
 #include "projectsettings.h"
+#include "localization.h"
 #include "article.h"
 #include "articletag.h"
 #include "projectfiles.h"
@@ -31,14 +32,19 @@ public:
 
 private:
 	void Cleanup();
+	void ExportLanguage(std::string language, boost::filesystem::path exportFolder);
+	void PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl, const Article& article);
 	void AddArticleToTag(std::string tagName, Article article);
 	void CreateTag(std::string tagName);
-	std::string GenerateTagLinks(std::string currentTag);
+	std::string GenerateTagLinks(const std::string& currentTag, const std::string& language);
 	std::string GeneratePageLinks(std::string currentPage);
+	std::string GenerateLanguageLinks(std::string currentLanguage);
 
-	bool LoadConfig(std::string path);
+	bool LoadConfig(const std::string& path);
 	bool SetupExportFolder(std::string sourceFolder, std::string targetFolder);
 	void EmptyFolder(std::string path);
+
+	bool getArticleLink(const std::string& fileName, std::string& link, std::string& title);
 
 	std::string m_LocalUrl;
 
@@ -48,8 +54,10 @@ private:
 		boost::filesystem::path const & destination);
 
 	ProjectSettings m_Settings;
+	Localization m_Localization;
 	std::vector<Article> m_Articles;
 	std::vector<Article> m_Pages;
+	std::vector<std::string> m_Languages;
 	std::map<std::string, ArticleTag> m_Tags;
 	std::vector<ArticleTag> m_SortedTags;
 

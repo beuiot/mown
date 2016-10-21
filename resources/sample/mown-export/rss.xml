@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+  <channel>
+    <title>My own website NOW!</title>
+    <link>http://www.website.com</link>
+    <description>Pensées du moment et trucs que j'ai fait</description>
+    <lastBuildDate>Mon, Oct 10 2016 11:00:00 GMT</lastBuildDate>
+    <item>
+       <title>art_en_fr</title>
+       <link>http://www.website.com/2016-10-10-art-en-fr</link>
+       <description>Français et anglais !</description>
+       <pubDate>Mon, Oct 10 2016 11:00:00 GMT</pubDate>
+    </item>
+    <item>
+       <title>art_fr</title>
+       <link>http://www.website.com/2016-10-10-art-fr</link>
+       <description>Article en français seulement</description>
+       <pubDate>Mon, Oct 10 2016 11:00:00 GMT</pubDate>
+    </item>
+    <item>
+       <title>Superbe post</title>
+       <link>http://www.website.com/2015-01-16-Superbe-post</link>
+       <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id tempus mi. Quisque eleifend, ipsum a venenatis feugiat, nibh felis iaculis risus, et molestie mauris felis eget ex. Vestibulum elementum diam consequat augue viverra, vel finibus magna maximus. Phasellus sapien erat, aliquet quis finibus vel, vehicula nec massa. Sed sit amet commodo velit. Sed vestibulum sit amet neque vitae laoreet.</description>
+       <pubDate>Fri, Jan 16 2015 11:00:00 GMT</pubDate>
+    </item>
+    <item>
+       <title>Superbe post</title>
+       <link>http://www.website.com/2015-01-16-Superbe-post</link>
+       <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id tempus mi. Quisque eleifend, ipsum a venenatis feugiat, nibh felis iaculis risus, et molestie mauris felis eget ex. Vestibulum elementum diam consequat augue viverra, vel finibus magna maximus. Phasellus sapien erat, aliquet quis finibus vel, vehicula nec massa. Sed sit amet commodo velit. Sed vestibulum sit amet neque vitae laoreet.</description>
+       <pubDate>Fri, Jan 16 2015 11:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

@@ -23,18 +23,12 @@ void ProjectFiles::Configure(std::string projectPath, bool createIfMissing)
 	m_CreateIfMissing = createIfMissing;
 }
 
-bool ProjectFiles::LoadMainTemplate(std::string websiteRoot)
+bool ProjectFiles::LoadMainTemplate()
 {
-	bool result = LoadTemplate(
+	return LoadTemplate(
 		kPFMainTemplateFileName,
 		m_MainTemplate,
 		std::bind(&ProjectFiles::GetMainTemplateDefaultContent, *this));
-
-	if (result)
-	{
-		ContentFactory::ReplaceInString(m_MainTemplate, "\"/\"", "\"" + websiteRoot + "\"");
-	}
-	return result;
 }
 
 bool ProjectFiles::LoadArticleTemplate()
@@ -89,6 +83,25 @@ std::string ProjectFiles::GetPageTemplate()
 std::string ProjectFiles::GetCommentsTemplate()
 {
 	return m_CommentsTemplate;
+}
+
+std::string ProjectFiles::GetHtaccessFile(std::string defaultLanguage, bool defaultLanguageInSubfolder, std::vector<std::string> languages)
+{
+	std::stringstream ss;
+
+	ss << "RewriteEngine on" << std::endl;
+
+	for (auto it = languages.begin(); it != languages.end(); ++it)
+	{
+		if (*it == defaultLanguage)
+			continue;
+
+		ss << "RewriteCond %{HTTP:Accept-Language} (" << *it << ") [NC]" << std::endl;
+		ss << "RewriteRule ^index.html$ " << *it << "/index.html [L]" << std::endl;
+		ss << std::endl;
+	}
+
+	return ss.str();
 }
 
 bool ProjectFiles::LoadTemplate(std::string path, std::string &target, std::function<std::string()> defaultContent)
@@ -150,9 +163,10 @@ std::string ProjectFiles::GetMainTemplateDefaultContent()
 	std::stringstream ss;
 
 	ss << "--- <b>Main template begin</b><hr>" << std::endl;
-	ss << "Website name: <a href=\"/\"><!-- head.m_WebsiteName --></a><hr>" << std::endl;
+	ss << "Website name: <a href=\"@INDEX@\">@WEBSITE_NAME@</a><hr>" << std::endl;
 	ss << "Title: <!-- head.m_Title --><hr>" << std::endl;
-	ss << "Website description: <!-- head.m_WebsiteDescription --><hr>" << std::endl;
+	ss << "Language links: <!-- languagelinks --><hr>" << std::endl;
+	ss << "Website description: @WEBSITE_DESCRIPTION@<hr>" << std::endl;
 	ss << "Page links: <!-- pagelinks --><hr>" << std::endl;
 	ss << "Tag links: <!-- taglinks --><hr>" << std::endl;
 	ss << "Page list: <!-- pagelist --><hr>" << std::endl;
@@ -169,6 +183,7 @@ std::string ProjectFiles::GetArticleTemplateDefaultContent()
 	ss << "--- <b>Article template begin</b><hr>" << std::endl;
 	ss << "Date: <!-- m_Date.day -->&nbsp; <!-- m_Date.month -->&nbsp; <!-- m_Date.year --><hr>" << std::endl;
 	ss << "Title: <!-- m_Title --><hr>" << std::endl;
+	ss << "Article language links: <!-- m_ArticleLanguageLinks --><hr>" << std::endl;
 	ss << "Content: <!-- m_Content --><hr>" << std::endl;
 	ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
 	ss << "Tags: <!-- m_Tags --><hr>" << std::endl;
@@ -183,6 +198,7 @@ std::string ProjectFiles::GetPageTemplateDefaultContent()
 
 	ss << "--- <b>Page template begin</b><hr>" << std::endl;
 	ss << "Title: <!-- m_Title --><hr>" << std::endl;
+	ss << "Page language links: <!-- m_ArticleLanguageLinks --><hr>" << std::endl;
 	ss << "Content: <!-- m_Content --><hr>" << std::endl;
 	ss << "Comments link: <!-- m_CommentsLink --><hr>" << std::endl;
 	ss << "--- <b>Page template end</b><br />" << std::endl;
@@ -195,6 +211,8 @@ std::string ProjectFiles::GetCommentsTemplateDefaultContent()
 	std::stringstream ss;
 
 	ss << "--- <b>Comments template begin</b><hr>" << std::endl;
+	ss << "Page url: @PAGE_URL@<hr>" << std::endl;
+	ss << "Page identifier: @PAGE_IDENTIFIER@<hr>" << std::endl;
 	ss << "--- <b>Comments template end</b><br />" << std::endl;
 
 	return ss.str();

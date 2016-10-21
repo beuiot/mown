@@ -13,9 +13,26 @@ ArticleTag::~ArticleTag()
 
 }
 
+void ArticleTag::SetLanguage(const Localization& localization, const std::string& language)
+{
+	m_CurrentLanguage = language;
+	m_Localization = localization;
+}
+
+std::string ArticleTag::GetName()
+{
+	std::string result;
+	const std::string id = "TAG_" + m_Name;
+
+	if (!m_Localization.GetLocalizedStringFromId(id, result, m_CurrentLanguage))
+		result = m_Name;
+
+	return result;
+}
+
 std::string ArticleTag::GetPrettyName()
 {
-	std::string result = m_Name;
+	std::string result = GetName();
 	ContentFactory::ReplaceInString(result, " ", "&nbsp;");
 	return result;
 }
@@ -33,7 +50,7 @@ std::string ArticleTag::GetFileNameForPage(int page)
 	}
 	else
 	{
-		std::string name = m_Name;
+		std::string name = GetName();
 		ContentFactory::SanitizeString(name);
 
 		if (page == 0)
@@ -55,15 +72,13 @@ std::string ArticleTag::GetLinkForPage(int page)
 		{
 			if (m_LocalPreview)
 				ss << "index.html";
-			else
-				ss << m_WebsiteRoot;
 		}
 		else
 			ss << (page + 1) << (m_LocalPreview ? ".html" : "");
 	}
 	else
 	{
-		std::string name = m_Name;
+		std::string name = GetName();
 		ContentFactory::SanitizeString(name);
 		if (page == 0)
 			ss << name << (m_LocalPreview ? ".html" : "");
@@ -84,7 +99,7 @@ std::string ArticleTag::GeneratePageList(int page)
 		if (i == page)
 			ss << "<span class=\"current_page\">" << (i + 1) << "</span>";
 		else
-			ss << "<a href=\"" << GetLinkForPage(i) << "\">" << (i + 1) << "</a>";
+			ss << "<a href=\"@PWD@" << GetLinkForPage(i) << "\">" << (i + 1) << "</a>";
 	}
 
 	ss << "</div>";
@@ -97,7 +112,8 @@ int ArticleTag::GetPageCount()
 	if (m_Articles.size() == 0)
 		return 1; // Always have one page so index.html is created without articles
 
-	return ((m_Articles.size() - 1) / m_ArticlesPerPage) + 1;
+	size_t count = ((m_Articles.size() - 1) / m_ArticlesPerPage) + 1;
+	return (int)count;
 }
 
 std::vector<Article> ArticleTag::GetPageArticles(int page)
@@ -111,17 +127,17 @@ std::vector<Article> ArticleTag::GetPageArticles(int page)
 	return result;
 }
 
-std::string ArticleTag::FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagLinks, const std::string & pageLinks)
+std::string ArticleTag::FormatArticleListPage(int page, const std::string & pageTemplate, const std::string & articleTemplate, const std::string & tagLinks, const std::string & pageLinks, const std::string & languageLinks, const ProjectSettings& settings)
 {
 	std::stringstream ss;
 	std::vector<Article> articles = GetPageArticles(page);
 
 	for (auto it = articles.begin(); it != articles.end(); it++)
-		ss << it->FormatContent(articleTemplate, true, m_EnableComments);
+		ss << it->FormatContent(articleTemplate, true, m_EnableComments, settings);
 
 	std::string formatedArticles = pageTemplate;
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- content -->", ss.str());
-	ContentFactory::ReplaceInString(formatedArticles, "<!-- head.m_Title -->", (m_IsIndex ? "" : " - " + m_Name) + (page > 0 ? " - page " + std::to_string(page + 1) : ""));
+	ContentFactory::ReplaceInString(formatedArticles, "<!-- head.m_Title -->", (m_IsIndex ? "" : " - " + GetName()) + (page > 0 ? " - page " + std::to_string(page + 1) : ""));
 
 	std::string pageList = "";
 	if (GetPageCount() > 1)
@@ -130,6 +146,7 @@ std::string ArticleTag::FormatArticleListPage(int page, const std::string & page
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- pagelist -->", pageList);
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- taglinks -->", tagLinks);
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- pagelinks -->", pageLinks);
+	ContentFactory::ReplaceInString(formatedArticles, "<!-- languagelinks -->", languageLinks);
 
 	return formatedArticles;
 }
