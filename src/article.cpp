@@ -523,9 +523,6 @@ void Article::AddArticleData(std::string rawYaml, std::string rawContent)
 		articleData.m_Title = p.stem().string();
 	}
 
-	if (articleData.m_Tags.size() == 0)
-		articleData.m_Tags.push_back("Tag1");
-
 	m_Data.push_back(articleData);
 }
 
@@ -554,6 +551,9 @@ bool Article::SaveFile()
 
 			if (!m_IsPage)
 			{
+				if (it->m_Tags.size() == 0)
+					it->m_Tags.push_back("Tag1");
+
 				config["m_Tags"] = it->m_Tags;
 
 				using namespace boost::gregorian;
