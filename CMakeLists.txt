@@ -55,7 +55,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ### Qt ###
 # Instruct CMake to run moc and generate .ui file headers automatically when needed.
 set(CMAKE_AUTOMOC ON)
-SET(CMAKE_AUTOUIC ON)  
+SET(CMAKE_AUTOUIC ON)
+SET(CMAKE_AUTORCC ON)
 
 find_package(Qt5Widgets)
 find_package(Qt5WebEngineWidgets)
@@ -103,10 +104,12 @@ include_directories(src ${Boost_INCLUDE_DIRS})
 
 file(GLOB_RECURSE ALL_SOURCE_FILES src/*.cpp)
 file(GLOB_RECURSE ALL_HEADER_FILES src/*.h)
+file(GLOB_RECURSE ALL_RESOURCE_FILES resources/*.qrc)
 
 add_executable(Mown WIN32
   ${ALL_SOURCE_FILES}
-  ${ALL_HEADER_FILES})
+  ${ALL_HEADER_FILES}
+  ${ALL_RESOURCE_FILES})
 
 target_link_libraries(Mown
   ${Boost_LIBRARIES}
