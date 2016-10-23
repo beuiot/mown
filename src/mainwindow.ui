@@ -91,6 +91,10 @@
          <property name="text">
           <string>Load...</string>
          </property>
+         <property name="icon">
+          <iconset resource="../resources/ui/ui.qrc">
+           <normaloff>:/toolbar/icon.png</normaloff>:/toolbar/icon.png</iconset>
+         </property>
         </widget>
        </item>
        <item row="0" column="8">
@@ -250,6 +254,8 @@
    <header>clickablestatusbar.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../resources/ui/ui.qrc"/>
+ </resources>
  <connections/>
 </ui>
