@@ -20,7 +20,9 @@
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(new Ui::MainWindow)
+	ui(new Ui::MainWindow),
+	m_CompactMode(false),
+	m_CompactModeSpacer(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Ignored))
 {
 	ui->setupUi(this);
 
@@ -51,6 +53,23 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_QOut;
 	delete m_QOutError;
+}
+
+void MainWindow::resizeEvent(QResizeEvent * event)
+{
+	long sideToolbarNeededWidth = ui->leftToolbarLayout->geometry().width() + ui->rightToolbarLayout->geometry().width();
+	long centerToolbarNeededWidth = ui->centerToolbarLayout->geometry().width();
+
+	long widthAvailable = size().width();
+
+	bool shouldEnableCompactMode = widthAvailable < (sideToolbarNeededWidth + centerToolbarNeededWidth + 16);
+
+
+	std::cout << "Side toolbar size: " << sideToolbarNeededWidth << ", center toolbar size: " << centerToolbarNeededWidth << ", window size: " << widthAvailable << ", should be compact: " << shouldEnableCompactMode << std::endl;
+	if (sideToolbarNeededWidth == 0 || centerToolbarNeededWidth == 0)
+		return;
+
+	SetCompactMode(shouldEnableCompactMode);
 }
 
 void MainWindow::SaveSettings()
@@ -160,6 +179,40 @@ void MainWindow::on_createArticleButton_clicked()
 	std::ofstream f(m_CurrentProjectFolder + "/" + articleName + ".yaml");
 
 	DelayedExport();
+}
+
+void MainWindow::SetCompactMode(bool compactMode)
+{
+	if (m_CompactMode != compactMode)
+	{
+		m_CompactMode = compactMode;
+
+		if (m_CompactMode)
+		{
+			ui->toolbarHorizontalLayout->removeItem(ui->stretchedCenterToolbarLayout);
+			ui->toolbarVerticalLayout->addItem(ui->stretchedCenterToolbarLayout);
+
+			ui->widget->setMinimumHeight(75);
+			ui->widget->setMaximumHeight(75);
+
+			ui->toolbarHorizontalLayout->insertSpacerItem(1, m_CompactModeSpacer);
+		}
+		else
+		{
+			ui->toolbarVerticalLayout->removeItem(ui->stretchedCenterToolbarLayout);
+			ui->toolbarHorizontalLayout->insertItem(1, ui->stretchedCenterToolbarLayout);
+
+			ui->widget->setMinimumHeight(50);
+			ui->widget->setMaximumHeight(50);
+
+			ui->toolbarHorizontalLayout->removeItem(m_CompactModeSpacer);
+		}
+
+		ui->toolbarHorizontalLayout->update();
+
+		update();
+		repaint();
+	}
 }
 
 void MainWindow::UpdateWatcher(const QString & fileName)

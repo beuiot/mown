@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QFileSystemWatcher>
 #include <QTimer>
+#include <QSpacerItem>
 #include <string>
 #include "qdebugstream.h"
 #include "mown.h"
@@ -19,6 +20,7 @@ class MainWindow : public QMainWindow
 public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	void resizeEvent(QResizeEvent * event);
 
 private:
 	Ui::MainWindow *ui;
@@ -33,6 +35,10 @@ private:
 
 	void LoadSettings();
 	void SaveSettings();
+
+	bool m_CompactMode;
+	QSpacerItem* m_CompactModeSpacer;
+	void SetCompactMode(bool compactMode);
 
 	void UpdateWatcher(const QString &fileName);
 
