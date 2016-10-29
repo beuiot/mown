@@ -1,5 +1,14 @@
 <RCC>
     <qresource prefix="/toolbar">
+        <file>add.png</file>
+        <file>edit.png</file>
+        <file>export.png</file>
+        <file>gotofolder.png</file>
+        <file>home.png</file>
         <file>icon.png</file>
+        <file>next.png</file>
+        <file>open.png</file>
+        <file>previous.png</file>
+        <file>reload.png</file>
     </qresource>
 </RCC>
