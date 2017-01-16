@@ -58,9 +58,20 @@ bool ProjectFiles::LoadCommentsTemplate()
 bool ProjectFiles::CreateStyleSheetIfNecessary()
 {
 	boost::filesystem::path d(m_ProjectPath);
-	if (!boost::filesystem::exists(d / "style.css"))
+	d = d / "style.css";
+
+	if (!boost::filesystem::exists(d))
 	{
-		boost::filesystem::ofstream (d / "style.css");
+		std::ofstream file(d.string(), std::ios_base::trunc);
+
+		if (!file.is_open())
+		{
+			std::cerr << "Could not open " << d.string() << " for writing" << std::endl;
+		}
+		else
+		{
+			file << "";
+		}
 	}
 	return true;
 }
