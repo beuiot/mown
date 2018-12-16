@@ -346,12 +346,21 @@ void MainWindow::on_serverPath_editingFinished()
 
 void MainWindow::on_webView_urlChanged(const QUrl& url)
 {
-	std::string sourceFile = m_Mown.GetSourceFilenameForPreviewFile(url.fileName().toStdString());
-	std::cout << url.fileName().toStdString() << " has source file " << sourceFile << std::endl;
-	m_CurrentSourceFile = sourceFile;
+	try {
+		auto article = m_Mown.GetArticleForPreviewFile(url.fileName().toStdString());
+		const auto& sourceFile = article.GetSourceFilePath();
+		std::cout << url.fileName().toStdString() << " has source file " << sourceFile << std::endl;
+		m_CurrentSourceFile = sourceFile;
 
-	QFileInfo fileInfo(QString::fromStdString(m_CurrentSourceFile));
-	ui->openSourceFileButton->setText(fileInfo.fileName());
+		QFileInfo fileInfo(QString::fromStdString(m_CurrentSourceFile));
+		ui->pageFileAndLanguage->setText(fileInfo.fileName() + "(" + QString::fromStdString(article.GetCurrentLanguage()) + ")");
+		ui->pageTitle->setText(QString::fromStdString(article.GetFileName()) + ": " + QString::fromStdString(article.GetTitle()));
 
-	ui->openSourceFileButton->setVisible(!sourceFile.empty());
+		ui->openSourceFileButton->setVisible(!sourceFile.empty());
+	}
+	catch (std::invalid_argument e) {
+		ui->pageFileAndLanguage->setText("");
+		ui->pageTitle->setText("No current article");
+		ui->openSourceFileButton->setVisible(false);
+	}
 }

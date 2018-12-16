@@ -21,7 +21,7 @@ public:
 	bool PathHasNewContent(std::string path);
 	void Dump(bool summary);
 
-	std::string GetSourceFilenameForPreviewFile(std::string previewFile);
+	const Article& GetArticleForPreviewFile(std::string previewFile);
 
 	bool m_LocalPreview;
 	bool m_EnableComments;
