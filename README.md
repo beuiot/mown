@@ -41,23 +41,23 @@ Issues, comments and external pull requests are welcome; even more if they fit t
 
 Mown depends on the following libraries and tools:
 
-- Qt 5.7
+- Qt 5.12.0
 - Boost 1.57.0 or later
 - CMake 2.8.11 or later
 - yaml-cpp
 
-##### Windows (MSVC 14 x64)
+##### Windows (MSVC 2017 x64)
 
 ###### Install requirements
 
 - Install latest cmake
-- Install QT 5.7 (msvc 14 2015 x64 binaries)
-- Install Boost MSVC 14 2015 64bits windows pre-built binaries
+- Install QT 5.7 (msvc 15 2017 x64 binaries)
+- Install Boost MSVC 14.1 2017 64bits windows pre-built binaries
 
 ###### Environment/CMake variables
 
-- BOOST_ROOT to the boost dir (for instance C:\local\boost_1_61_0)
-- CMAKE_PREFIX_PATH to the Qt build dir (for instance C:\Qt\5.7\msvc2015_64)
+- BOOST_ROOT to the boost dir (for instance C:\local\boost_1_69_0)
+- CMAKE_PREFIX_PATH to the Qt build dir (for instance C:\Qt\5.12.0\msvc2017_64)
 
 ###### Build yaml-cpp
 
@@ -66,7 +66,7 @@ Mown depends on the following libraries and tools:
 $ git submodule update --init
 $ cd dependencies\yaml-cpp
 $ mkdir build && cd build
-$ cmake -G "Visual Studio 14 2015 Win64" ..
+$ cmake -G "Visual Studio 15 2017 Win64" -DYAML_CPP_BUILD_TESTS=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DYAML_CPP_BUILD_CONTRIB=OFF -DYAML_CPP_INSTALL=OFF ..
 $ cmake --build . --config Debug
 $ cmake --build . --config Release
 ```
@@ -76,6 +76,6 @@ $ cmake --build . --config Release
 ```sh
 $ (in mown repository root)
 $ mkdir build && cd build
-$ cmake -G "Visual Studio 14 2015 Win64" ..
+$ cmake -G "Visual Studio 15 2017 Win64" ..
 $ cmake --build .
 ```
