@@ -150,8 +150,11 @@ if (MSVC)
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Core.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Gui.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Network.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Positioning.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5PrintSupport.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Qml.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Quick.dll
+    ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5QuickWidgets.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5Svg.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5WebChannel.dll
     ${CMAKE_CURRENT_BINARY_DIR}/Release/Qt5WebEngineCore.dll
