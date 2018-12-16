@@ -134,12 +134,16 @@ std::string Article::GetFileNameForLanguage(const std::string& language) const
 }
 
 
-bool Article::HasFileName(const std::string& fileName)
+bool Article::HasFileName(const std::string& fileName, std::string& language)
 {
+	language = "";
 	for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
 	{
 		if (GetFileNameForLanguage(it->m_Language) == fileName)
+		{
+			language = it->m_Language;
 			return true;
+		}
 	}
 	return false;
 }
@@ -403,6 +407,11 @@ bool Article::SetLanguage(std::string language)
 	m_HasCurrentLanguage = FindData(language, m_CurrentData);
 	m_CurrentLanguage = language;
 	return HasCurrentLanguage();
+}
+
+std::string Article::GetCurrentLanguage()
+{
+	return m_CurrentLanguage;
 }
 
 bool Article::HasCurrentLanguage()

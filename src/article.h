@@ -20,7 +20,7 @@ public:
 	std::string GetSourceFilePath();
 	std::string GetFileName();
 	std::string GetFileNameForLanguage(const std::string& language) const;
-	bool HasFileName(const std::string& fileName);
+	bool HasFileName(const std::string& fileName, std::string& language);
 	std::string GetLink();
 	std::string GetLinkForLanguage(const std::string& language);
 	std::string GetStandardDate();
@@ -30,6 +30,7 @@ public:
 	std::string FormatExcerpt();
 
 	bool SetLanguage(std::string language);
+	std::string GetCurrentLanguage();
 	bool HasCurrentLanguage();
 	bool GetIgnore();
 	bool GetHidden();

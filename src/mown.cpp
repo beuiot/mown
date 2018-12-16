@@ -164,9 +164,9 @@ void Mown::Dump(bool summary)
 	std::cout << std::endl;
 }
 
-std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
+const Article& Mown::GetArticleForPreviewFile(std::string previewFile)
 {
-	std::string result = "";
+	std::string language = "";
 
 	size_t extensionPosition = previewFile.rfind(".html");
 	if (extensionPosition != std::string::npos)
@@ -176,23 +176,25 @@ std::string Mown::GetSourceFilenameForPreviewFile(std::string previewFile)
 
 	for (auto it = m_Articles.begin(); it != m_Articles.end(); ++it)
 	{
-		if (it->HasFileName(previewFile))
+		if (it->HasFileName(previewFile, language))
 		{
-			result = it->GetSourceFilePath();
+			it->SetLanguage(language);
+			return *it;
 			break;
 		}
 	}
 
 	for (auto it = m_Pages.begin(); it != m_Pages.end(); ++it)
 	{
-		if (it->HasFileName(previewFile))
+		if (it->HasFileName(previewFile, language))
 		{
-			result = it->GetSourceFilePath();
+			it->SetLanguage(language);
+			return *it;
 			break;
 		}
 	}
 
-	return result;
+	throw std::invalid_argument("Article not found for preview file");
 }
 
 std::string Mown::GenerateTagLinks(const std::string& currentTag, const std::string& language)
