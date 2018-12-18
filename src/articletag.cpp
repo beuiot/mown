@@ -37,16 +37,16 @@ std::string ArticleTag::GetPrettyName()
 	return result;
 }
 
-std::string ArticleTag::GetFileNameForPage(int page)
+std::string ArticleTag::GetFileNameForPage(int page, const ProjectSettings& settings)
 {
 	std::stringstream ss;
 
 	if (m_IsIndex)
 	{
 		if (page == 0)
-			ss << "index.html";
+			ss << "index." << settings.m_FileExtention;
 		else
-			ss << (page + 1) << ".html";
+			ss << (page + 1) << "." << settings.m_FileExtention;
 	}
 	else
 	{
@@ -54,15 +54,15 @@ std::string ArticleTag::GetFileNameForPage(int page)
 		ContentFactory::SanitizeString(name);
 
 		if (page == 0)
-			ss << name << ".html";
+			ss << name << "." << settings.m_FileExtention;
 		else
-			ss << name << (page + 1) << ".html";
+			ss << name << (page + 1) << "." << settings.m_FileExtention;
 	}
 
 	return ss.str();
 }
 
-std::string ArticleTag::GetLinkForPage(int page)
+std::string ArticleTag::GetLinkForPage(int page, const ProjectSettings& settings)
 {
 	std::stringstream ss;
 
@@ -71,25 +71,25 @@ std::string ArticleTag::GetLinkForPage(int page)
 		if (page == 0)
 		{
 			if (m_LocalPreview)
-				ss << "index.html";
+				ss << "index." << settings.m_FileExtention;
 		}
 		else
-			ss << (page + 1) << (m_LocalPreview ? ".html" : "");
+			ss << (page + 1) << (m_LocalPreview ? "." + settings.m_FileExtention : "");
 	}
 	else
 	{
 		std::string name = GetName();
 		ContentFactory::SanitizeString(name);
 		if (page == 0)
-			ss << name << (m_LocalPreview ? ".html" : "");
+			ss << name << (m_LocalPreview ? "." + settings.m_FileExtention : "");
 		else
-			ss << name << (page + 1) << (m_LocalPreview ? ".html" : "");
+			ss << name << (page + 1) << (m_LocalPreview ? "." + settings.m_FileExtention : "");
 	}
 
 	return ss.str();
 }
 
-std::string ArticleTag::GeneratePageList(int page)
+std::string ArticleTag::GeneratePageList(int page, const ProjectSettings& settings)
 {
 	std::stringstream ss;
 	ss << "<div class=\"page_list\">";
@@ -99,7 +99,7 @@ std::string ArticleTag::GeneratePageList(int page)
 		if (i == page)
 			ss << "<span class=\"current_page\">" << (i + 1) << "</span>";
 		else
-			ss << "<a href=\"@PWD@" << GetLinkForPage(i) << "\">" << (i + 1) << "</a>";
+			ss << "<a href=\"@PWD@" << GetLinkForPage(i, settings) << "\">" << (i + 1) << "</a>";
 	}
 
 	ss << "</div>";
@@ -141,7 +141,7 @@ std::string ArticleTag::FormatArticleListPage(int page, const std::string & page
 
 	std::string pageList = "";
 	if (GetPageCount() > 1)
-		pageList = GeneratePageList(page);
+		pageList = GeneratePageList(page, settings);
 
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- pagelist -->", pageList);
 	ContentFactory::ReplaceInString(formatedArticles, "<!-- taglinks -->", tagLinks);

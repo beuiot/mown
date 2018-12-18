@@ -15,6 +15,7 @@ public:
 	std::string m_Url;
 	std::string m_DefaultLanguage;
 	bool m_DefaultLanguageInRoot;
+	std::string m_FileExtention;
 };
 
 #endif // PROJECTSETTINGS_H

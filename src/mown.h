@@ -36,7 +36,7 @@ private:
 	void PostProcessContent(std::string& content, int directoryDepth, const std::string& subFolder, const std::string& language, const std::string& url, const std::string& mainUrl, const Article& article);
 	void AddArticleToTag(std::string tagName, Article article);
 	void CreateTag(std::string tagName);
-	std::string GenerateTagLinks(const std::string& currentTag, const std::string& language);
+	std::string GenerateTagLinks(const std::string& currentTag, const std::string& language, const ProjectSettings& settings);
 	std::string GeneratePageLinks(std::string currentPage);
 	std::string GenerateLanguageLinks(std::string currentLanguage);
 

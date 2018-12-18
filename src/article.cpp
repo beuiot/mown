@@ -148,17 +148,17 @@ bool Article::HasFileName(const std::string& fileName, std::string& language)
 	return false;
 }
 
-std::string Article::GetLink()
+std::string Article::GetLink(const ProjectSettings& settings)
 {
 	if (m_CurrentData.m_ExternalLink)
 		return m_CurrentData.m_Link;
 
-	return GetLinkForLanguage(m_CurrentLanguage);
+	return GetLinkForLanguage(m_CurrentLanguage, settings);
 }
 
-std::string Article::GetLinkForLanguage(const std::string& language)
+std::string Article::GetLinkForLanguage(const std::string& language, const ProjectSettings& settings)
 {
-	return GetFileNameForLanguage(language) + (m_LocalPreview ? ".html" : "");
+	return GetFileNameForLanguage(language) + (m_LocalPreview ? "." + settings.m_FileExtention : "");
 }
 
 std::string Article::GetStandardDate()
@@ -194,6 +194,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 	bool bulletListStarted = false;
 	bool hasExcerpt = false;
 	bool linkStarted = false;
+	bool phpStarted = false;
 	int linksStarts = 0;
 
 	std::string line;
@@ -230,6 +231,12 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 		if (linksStarts > 0)
 			linkStarted = true;
 
+		pos = line.find("<?php", 0);
+		if (pos != std::string::npos)
+		{
+			phpStarted = true;
+		}
+
 		if (bulletListStarted && !(line.length() >= 2 && line[0] == '*' && line[1] != '*'))
 		{
 			bulletListStarted = false;
@@ -264,7 +271,8 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 			|| line.find("</td") != std::string::npos
 			|| line.find("</table") != std::string::npos
 			|| line.find("<iframe") != std::string::npos
-			|| linkStarted)
+			|| linkStarted
+			|| phpStarted)
 			sstr << line << std::endl;
 		else if (line.length() > 0)
 			sstr << "<p>" << line << "</p>" << std::endl;
@@ -274,22 +282,28 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 			linkStarted = false;
 			linksStarts = 0;
 		}
+
+		pos = line.find("?>", 0);
+		if (pos != std::string::npos)
+		{
+			phpStarted = false;
+		}
 	}
 
 	std::string result = articleTemplate;
 	std::string commentsLink = "";
 
 	if (hasExcerpt)
-		commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">Lire la suite...</a>";
+		commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? "." + settings.m_FileExtention : "") + "\">Lire la suite...</a>";
 
 	ContentFactory::ReplaceInString(result, "<!-- m_Content -->", sstr.str());
 
 	if (isInList)
 	{
-		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "\">" + m_CurrentData.m_Title + "</a>");
+		ContentFactory::ReplaceInString(result, "<!-- m_Title -->", "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? "." + settings.m_FileExtention : "") + "\">" + m_CurrentData.m_Title + "</a>");
 
 		if (enableComments && !hasExcerpt)
-			commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? ".html" : "") + "#comments\">Commentaires</a>";
+			commentsLink = "<a href=\"@PWD@" + GetFileName() + (m_LocalPreview ? "." + settings.m_FileExtention : "") + "#comments\">Commentaires</a>";
 	}
 
 	ContentFactory::ReplaceInString(result, "<!-- m_Title -->", m_CurrentData.m_Title);
@@ -322,7 +336,7 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 			if (isInsubfolder)
 				languageLinksStream << it->m_Language << "/";
 
-			languageLinksStream << GetFileNameForLanguage(it->m_Language) << (m_LocalPreview ? ".html" : "") << "\">" << it->m_Language << "</a>";
+			languageLinksStream << GetFileNameForLanguage(it->m_Language) << (m_LocalPreview ? "." + settings.m_FileExtention : "") << "\">" << it->m_Language << "</a>";
 		}
 		languageLinksStream << "</span>";
 
