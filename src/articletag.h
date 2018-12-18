@@ -27,9 +27,9 @@ public:
 	bool m_EnableComments;
 	std::string m_WebsiteRoot;
 
-	std::string GetFileNameForPage(int page);
-	std::string GetLinkForPage(int page);
-	std::string GeneratePageList(int page);
+	std::string GetFileNameForPage(int page, const ProjectSettings& settings);
+	std::string GetLinkForPage(int page, const ProjectSettings& settings);
+	std::string GeneratePageList(int page, const ProjectSettings& settings);
 
 	int GetPageCount();
 

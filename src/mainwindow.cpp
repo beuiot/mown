@@ -363,4 +363,5 @@ void MainWindow::on_webView_urlChanged(const QUrl& url)
 		ui->pageTitle->setText("No current article");
 		ui->openSourceFileButton->setVisible(false);
 	}
+	ui->webView->setUrl(url);
 }

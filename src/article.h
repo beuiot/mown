@@ -21,8 +21,8 @@ public:
 	std::string GetFileName();
 	std::string GetFileNameForLanguage(const std::string& language) const;
 	bool HasFileName(const std::string& fileName, std::string& language);
-	std::string GetLink();
-	std::string GetLinkForLanguage(const std::string& language);
+	std::string GetLink(const ProjectSettings& settings);
+	std::string GetLinkForLanguage(const std::string& language, const ProjectSettings& settings);
 	std::string GetStandardDate();
 	bool IsExternallink();
 	const std::string& GetStylesheet() const;
@@ -69,6 +69,7 @@ private:
 	std::string m_SourceFilePath;
 	std::string m_CurrentLanguage;
 	std::string m_Stylesheet;
+	std::string m_FileExtension;
 
 	std::vector<ArticleData> m_Data;
 	ArticleData m_CurrentData;

@@ -37,6 +37,9 @@ bool ProjectSettings::LoadFromFile(std::string path)
 		if (config["m_DefaultLanguageInRoot"] != NULL)
 			m_DefaultLanguageInRoot = config["m_DefaultLanguageInRoot"].as<bool>();
 
+		if (config["m_FileExtention"] != NULL)
+			m_FileExtention = config["m_FileExtention"].as<std::string>();
+
 	}
 	return true;
 }
@@ -57,6 +60,7 @@ bool ProjectSettings::SaveToFile(std::string path)
 		config["m_Url"] = m_Url;
 		config["m_DefaultLanguage"] = m_DefaultLanguage;
 		config["m_DefaultLanguageInRoot"] = m_DefaultLanguageInRoot;
+		config["m_FileExtention"] = m_FileExtention;
 
 		file << config;
 	}
@@ -69,4 +73,5 @@ void ProjectSettings::SetDefaultValues()
 	m_Url = "http://www.website.com";
 	m_DefaultLanguage = "en";
 	m_DefaultLanguageInRoot = true;
+	m_FileExtention = "html";
 }
