@@ -271,6 +271,8 @@ std::string Article::FormatContent(const std::string & articleTemplate, bool isI
 			|| line.find("</td") != std::string::npos
 			|| line.find("</table") != std::string::npos
 			|| line.find("<iframe") != std::string::npos
+			|| line.find("<form") != std::string::npos
+			|| line.find("</form") != std::string::npos
 			|| linkStarted
 			|| phpStarted)
 			sstr << line << std::endl;
